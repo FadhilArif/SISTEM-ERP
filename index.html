@@ -8,7 +8,81 @@
 :root{--bg:#0f172a;--bg2:#1e293b;--brand:#2563eb;--brand2:#1d4ed8;--line:#e2e8f0;--muted:#64748b;--soft:#f1f5f9;--ok:#16a34a;--bad:#dc2626;--warn:#f59e0b}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.5;font-size:14px}
-.app{display:flex;min-height:100vh}
+
+/* ========== LANDING ========== */
+#landing{
+  display:flex;position:fixed;inset:0;z-index:200;
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  align-items:center;justify-content:center;padding:20px;
+  overflow-y:auto;
+}
+#landing::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 10%,rgba(37,99,235,.25),transparent 45%),
+             radial-gradient(circle at 80% 90%,rgba(29,78,216,.2),transparent 45%);
+  pointer-events:none;
+}
+.landing-card{
+  position:relative;background:#fff;border-radius:20px;
+  padding:36px 32px;width:100%;max-width:400px;
+  box-shadow:0 30px 80px rgba(0,0,0,.4);text-align:center;
+  animation:pop .4s ease;
+}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.landing-logo{
+  width:64px;height:64px;border-radius:18px;margin:0 auto 16px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;box-shadow:0 8px 24px rgba(37,99,235,.35);
+}
+.landing-title{font-size:24px;font-weight:800;color:#0f172a;margin-bottom:4px;letter-spacing:-.3px}
+.landing-sub{font-size:13px;color:#64748b;margin-bottom:26px}
+.landing-state{display:none}
+.landing-state.on{display:block}
+.landing-input{
+  width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;
+  font-size:14px;font-family:inherit;margin-bottom:10px;transition:.15s;
+  background:#fff;
+}
+.landing-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.pw-wrap-landing{position:relative;margin-bottom:10px}
+.pw-wrap-landing input{margin-bottom:0;padding-right:44px}
+.pw-toggle-landing{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  background:transparent;border:0;cursor:pointer;font-size:16px;
+  padding:6px;line-height:1;color:#94a3b8;
+}
+.pw-toggle-landing:hover{color:#2563eb;background:transparent}
+.landing-btn{
+  width:100%;padding:12px;border:0;border-radius:10px;
+  background:#2563eb;color:#fff;font-weight:600;font-size:14px;
+  cursor:pointer;font-family:inherit;transition:.15s;margin-bottom:8px;
+}
+.landing-btn:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 8px 20px rgba(37,99,235,.3)}
+.landing-btn.ghost{background:#f1f5f9;color:#0f172a;border:1.5px solid #e2e8f0}
+.landing-btn.ghost:hover{background:#e2e8f0;box-shadow:none}
+.landing-note{font-size:12px;color:#94a3b8;margin-top:12px}
+.landing-error{
+  display:none;padding:10px 14px;border-radius:10px;font-size:13px;
+  background:#fee2e2;color:#991b1b;margin-bottom:14px;text-align:left;
+}
+.landing-error.on{display:block}
+.spinner{
+  width:44px;height:44px;margin:0 auto 16px;
+  border:3px solid rgba(37,99,235,.15);
+  border-top-color:#2563eb;border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.landing-loading-text{color:#64748b;font-size:14px}
+.landing-badge{
+  display:inline-block;font-size:11px;padding:4px 10px;border-radius:99px;
+  background:#dbeafe;color:#1e40af;font-weight:600;margin-bottom:16px;
+}
+
+/* ========== APP ========== */
+.app{display:none;min-height:100vh}
+.app.on{display:flex}
 aside{width:260px;background:var(--bg);color:#e2e8f0;padding:18px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
 aside h1{font-size:15px;color:#fff;margin-bottom:2px;padding:0 8px}
 aside .sub{font-size:11px;color:#94a3b8;margin-bottom:12px;padding:0 8px}
@@ -83,23 +157,17 @@ tr:hover td{background:#fafbfc}
 .tot{background:var(--soft);font-weight:700}
 .tot td{background:var(--soft)}
 h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
-/* AUTH BOX */
 .authBox{margin:0 4px 14px;padding:10px;background:#1e293b;border-radius:8px;font-size:12px}
-.authBox .status{color:#94a3b8;margin-bottom:8px;font-size:11px}
-.authBox input{margin-bottom:6px;padding:6px 8px;font-size:12px;background:#0f172a;border:1px solid #334155;color:#e2e8f0}
-.authBox input::placeholder{color:#64748b}
-.pw-wrap{position:relative;margin-bottom:6px}
-.pw-wrap input{margin-bottom:0 !important;padding-right:36px !important}
-.pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px 6px;line-height:1;width:auto;min-height:auto}
-.pw-toggle:hover{color:#e2e8f0;background:transparent}
-.authBox button.sm{width:100%;margin-bottom:4px}
-.authBox .user{color:#e2e8f0;font-size:11px;word-break:break-all;margin-bottom:6px}
+.authBox .user{color:#e2e8f0;font-size:11px;word-break:break-all;margin-bottom:8px}
 .authBox .sync{color:#64748b;font-size:10px;margin-top:6px;min-height:14px}
 .authBox .sync.ok{color:#4ade80}
 .authBox .sync.bad{color:#f87171}
 .authBox .sync.warn{color:#fbbf24}
 @media(max-width:820px){
-  .app{flex-direction:column}
+  #landing{padding:14px}
+  .landing-card{padding:28px 22px;border-radius:16px}
+  .landing-title{font-size:20px}
+  .app.on{flex-direction:column}
   aside{width:100%;height:auto;position:sticky;top:0;padding:10px 12px;max-height:60vh;overflow-y:auto;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.15)}
   aside h1{font-size:14px}
   aside .sub{display:none}
@@ -129,62 +197,83 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
   .modal-box{max-height:95vh;border-radius:12px}
   .modal-box .head, .modal-box .body, .modal-box .foot{padding:12px 14px}
   .authBox{margin:0 0 8px;padding:8px}
-  .authBox button.sm{min-height:36px}
 }
 </style>
 </head>
 <body>
+
+<!-- ========== LANDING ========== -->
+<div id="landing">
+  <div class="landing-card">
+    <div class="landing-logo"></div>
+    <h1 class="landing-title">ERP Practice</h1>
+    <p class="landing-sub">Accurate-like · Cloud Sync</p>
+
+    <div class="landing-error" id="landingError"></div>
+
+    <div class="landing-state on" id="landingLoading">
+      <div class="spinner"></div>
+      <p class="landing-loading-text">Memeriksa sesi…</p>
+    </div>
+
+    <div class="landing-state" id="landingLogin">
+      <span class="landing-badge">Portal Login</span>
+      <input class="landing-input" id="authEmail" type="email" placeholder="email"
+             autocapitalize="none" autocorrect="off" spellcheck="false"
+             autocomplete="email" inputmode="email">
+      <div class="pw-wrap-landing">
+        <input class="landing-input" id="authPass" type="password" placeholder="password"
+               autocapitalize="none" autocorrect="off" spellcheck="false"
+               autocomplete="current-password">
+        <button type="button" class="pw-toggle-landing" onclick="togglePw()" aria-label="Tampilkan password">👁️</button>
+      </div>
+      <button class="landing-btn" onclick="doLogin()">Masuk</button>
+      <button class="landing-btn ghost" onclick="doSignup()">Daftar Akun Baru</button>
+      <p class="landing-note">Data tersimpan aman di cloud — bisa diakses dari perangkat mana pun.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== APP ========== -->
 <div class="app">
 <aside>
   <h1>🏢 ERP Practice</h1>
   <div class="sub">Accurate-like · Supabase Sync</div>
 
-  <div class="authBox" id="authBox">
-    <div class="status" id="authStatus">Memeriksa Supabase…</div>
-    <div id="authForm" style="display:none">
-      <input id="authEmail" type="email" placeholder="email">
-      <div class="pw-wrap">
-        <input id="authPass" type="password" placeholder="password (min 6)">
-        <button type="button" class="pw-toggle" onclick="togglePw()" aria-label="Tampilkan password">👁️</button>
-      </div>
-      <button class="sm" onclick="doLogin()">Login</button>
-      <button class="sm ghost" onclick="doSignup()">Daftar</button>
-    </div>
-    <div id="authUser" style="display:none">
-      <div class="user" id="authEmailShow"></div>
-      <button class="sm ghost" onclick="doLogout()">Logout</button>
-    </div>
+  <div class="authBox" id="authBox" style="display:none">
+    <div class="user" id="authEmailShow"></div>
+    <button class="sm ghost" onclick="doLogout()" style="width:100%">Logout</button>
     <div class="sync" id="syncStatus"></div>
   </div>
 
   <nav class="nav">
     <div class="navgrp">Utama</div>
-    <a data-target="dashboard" class="active">📊 Dashboard</a>
-    <a data-target="perusahaan">🏭 Profil Perusahaan</a>
+    <a data-target="dashboard" class="active">Dashboard</a>
+    <a data-target="perusahaan">Profil Perusahaan</a>
     <div class="navgrp">Master Data</div>
-    <a data-target="coa">📋 Chart of Accounts</a>
-    <a data-target="customer">👤 Pelanggan</a>
-    <a data-target="vendor">🚚 Pemasok</a>
-    <a data-target="barang">📦 Barang & Jasa</a>
+    <a data-target="coa">Chart of Accounts</a>
+    <a data-target="customer">Pelanggan</a>
+    <a data-target="vendor">Pemasok</a>
+    <a data-target="barang">Barang & Jasa</a>
     <div class="navgrp">Transaksi</div>
-    <a data-target="penjualan">🧾 Penjualan</a>
-    <a data-target="pembelian">🛒 Pembelian</a>
-    <a data-target="penerimaan">💰 Penerimaan Kas</a>
-    <a data-target="pengeluaran">💸 Pengeluaran Kas</a>
-    <a data-target="jurnalumum">📒 Jurnal Umum</a>
+    <a data-target="penjualan">Penjualan</a>
+    <a data-target="pembelian">Pembelian</a>
+    <a data-target="penerimaan">Penerimaan Kas</a>
+    <a data-target="pengeluaran">Pengeluaran Kas</a>
+    <a data-target="jurnalumum">Jurnal Umum</a>
     <div class="navgrp">Persediaan</div>
-    <a data-target="kartustok">🗂️ Kartu Stok</a>
-    <a data-target="opname">🔍 Stock Opname</a>
+    <a data-target="kartustok">Kartu Stok</a>
+    <a data-target="opname">Stock Opname</a>
     <div class="navgrp">Laporan</div>
-    <a data-target="lapjurnal">📑 Jurnal</a>
-    <a data-target="lapbuku">📖 Buku Besar</a>
-    <a data-target="lapsaldo">⚖️ Neraca Saldo</a>
-    <a data-target="laplr">📈 Laba Rugi</a>
-    <a data-target="lapneraca">🏦 Neraca</a>
-    <a data-target="lapkas">💵 Arus Kas</a>
+    <a data-target="lapjurnal">Jurnal</a>
+    <a data-target="lapbuku">Buku Besar</a>
+    <a data-target="lapsaldo">Neraca Saldo</a>
+    <a data-target="laplr">Laba Rugi</a>
+    <a data-target="lapneraca">Neraca</a>
+    <a data-target="lapkas">Arus Kas</a>
     <div class="navgrp">Latihan</div>
-    <a data-target="roadmap">🗺️ Roadmap</a>
-    <a data-target="kuis">❓ Kuis</a>
+    <a data-target="roadmap">Roadmap</a>
+    <a data-target="kuis">Kuis</a>
   </nav>
 </aside>
 <main>
@@ -231,8 +320,8 @@ const today = () => new Date().toISOString().slice(0,10);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(msg,type='ok'){
   const d=document.createElement('div');d.textContent=msg;
-  d.style.cssText=`position:fixed;bottom:20px;right:20px;background:${type==='ok'?'#16a34a':'#dc2626'};color:#fff;padding:10px 16px;border-radius:8px;z-index:999;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2)`;
-  document.body.appendChild(d);setTimeout(()=>d.remove(),2200);
+  d.style.cssText=`position:fixed;bottom:20px;right:20px;background:${type==='ok'?'#16a34a':'#dc2626'};color:#fff;padding:10px 16px;border-radius:8px;z-index:999;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:calc(100% - 40px)`;
+  document.body.appendChild(d);setTimeout(()=>d.remove(),2600);
 }
 
 /* =========================================================
@@ -290,6 +379,35 @@ function save(){
 }
 
 /* =========================================================
+   LANDING / SCREEN SWITCHING
+========================================================= */
+function showApp(){
+  document.getElementById('landing').style.display = 'none';
+  document.querySelector('.app').classList.add('on');
+  renderAuthUI();
+}
+function showLanding(){
+  document.querySelector('.app').classList.remove('on');
+  const land = document.getElementById('landing');
+  land.style.display = 'flex';
+  document.getElementById('landingLoading').classList.remove('on');
+  document.getElementById('landingLogin').classList.add('on');
+  document.getElementById('landingError').classList.remove('on');
+}
+function showLoading(){
+  const land = document.getElementById('landing');
+  land.style.display = 'flex';
+  document.querySelector('.app').classList.remove('on');
+  document.getElementById('landingLoading').classList.add('on');
+  document.getElementById('landingLogin').classList.remove('on');
+}
+function showLandingError(msg){
+  const el = document.getElementById('landingError');
+  el.textContent = msg;
+  el.classList.add('on');
+}
+
+/* =========================================================
    SUPABASE SYNC
 ========================================================= */
 function isSupabaseConfigured(){
@@ -297,20 +415,18 @@ function isSupabaseConfigured(){
 }
 
 function renderAuthUI(){
-  const status = document.getElementById('authStatus');
-  const form = document.getElementById('authForm');
-  const userBox = document.getElementById('authUser');
+  const box = document.getElementById('authBox');
+  if(!box) return;
   if(currentUser){
-    status.style.display = 'none';
-    form.style.display = 'none';
-    userBox.style.display = 'block';
+    box.style.display = 'block';
     document.getElementById('authEmailShow').textContent = '👤 ' + currentUser.email;
+  }else if(!isSupabaseConfigured()){
+    box.style.display = 'block';
+    document.getElementById('authEmailShow').textContent = '🔌 Mode lokal (tanpa cloud)';
+    const btn = box.querySelector('button');
+    if(btn) btn.style.display = 'none';
   }else{
-    status.style.display = 'block';
-    form.style.display = 'block';
-    userBox.style.display = 'none';
-    status.textContent = 'Login untuk sinkron ke cloud';
-    status.style.color = '#94a3b8';
+    box.style.display = 'none';
   }
 }
 
@@ -364,23 +480,52 @@ async function pullFromCloud(){
 }
 
 async function initSupabase(){
-  const status = document.getElementById('authStatus');
-
+  // Mode lokal tanpa Supabase → langsung masuk
   if(!window.supabase || !isSupabaseConfigured()){
-    status.textContent = '🔌 Mode lokal (Supabase belum dikonfigurasi)';
-    status.style.color = '#fbbf24';
+    renderAuthUI();
+    showApp();
     return;
   }
 
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data:{ session } } = await sb.auth.getSession();
-  currentUser = session ? session.user : null;
-  renderAuthUI();
 
-  sb.auth.onAuthStateChange((_, sess) => {
+  // Cek sesi awal
+  let session = null;
+  try{
+    const res = await sb.auth.getSession();
+    session = res.data.session;
+  }catch(e){
+    console.error(e);
+  }
+  currentUser = session ? session.user : null;
+
+  if(currentUser){
+    // Sudah login → tarik data → tampilkan app
+    await pullFromCloud();
+    showApp();
+  }else{
+    // Belum login → tampilkan form
+    document.getElementById('landingLoading').classList.remove('on');
+    document.getElementById('landingLogin').classList.add('on');
+    renderAuthUI();
+  }
+
+  // Pasang listener SETELAH init supaya tidak double-fire di awal
+  sb.auth.onAuthStateChange((event, sess) => {
     currentUser = sess ? sess.user : null;
     renderAuthUI();
-    if(currentUser) setTimeout(() => pullFromCloud(), 0);
+
+    if(event === 'SIGNED_IN' && currentUser){
+      // Defer untuk hindari deadlock lock internal Supabase
+      setTimeout(async () => {
+        await pullFromCloud();
+        showApp();
+        toast('Login berhasil');
+      }, 0);
+    }
+    if(event === 'SIGNED_OUT'){
+      showLanding();
+    }
   });
 }
 
@@ -389,7 +534,7 @@ async function initSupabase(){
 ========================================================= */
 function togglePw(){
   const inp = document.getElementById('authPass');
-  const btn = inp.parentElement.querySelector('.pw-toggle');
+  const btn = inp.parentElement.querySelector('.pw-toggle-landing');
   if(inp.type === 'password'){
     inp.type = 'text';
     btn.textContent = '🙈';
@@ -407,22 +552,33 @@ window.togglePw = togglePw;
 ========================================================= */
 async function doSignup(){
   if(!sb) return toast('Supabase belum dikonfigurasi','bad');
-  const email = authEmail.value.trim();
+  const email = authEmail.value.trim().toLowerCase();
   const pass = authPass.value;
-  if(!email || pass.length < 6) return toast('Email valid & password min 6 karakter','bad');
+  if(!email || pass.length < 6) return showLandingError('Email valid & password minimal 6 karakter.');
+  document.getElementById('landingError').classList.remove('on');
+
   const { error } = await sb.auth.signUp({ email, password: pass });
-  if(error) return toast(error.message,'bad');
+  if(error) return showLandingError('Gagal daftar: ' + error.message);
   toast('Pendaftaran berhasil. Cek email (jika konfirmasi aktif).');
 }
+
 async function doLogin(){
   if(!sb) return toast('Supabase belum dikonfigurasi','bad');
-  const email = authEmail.value.trim();
+  const email = authEmail.value.trim().toLowerCase();
   const pass = authPass.value;
-  if(!email || !pass) return toast('Isi email & password','bad');
+  if(!email || !pass) return showLandingError('Isi email & password.');
+  document.getElementById('landingError').classList.remove('on');
+
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if(error) return toast(error.message,'bad');
-  toast('Login berhasil');
+  if(error){
+    if(/invalid/i.test(error.message)){
+      return showLandingError('Email atau password salah. Cek huruf besar-kecil dan pastikan tidak ada spasi ekstra.');
+    }
+    return showLandingError('Error: ' + error.message);
+  }
+  // Sukses — listener onAuthStateChange akan handle perpindahan layar
 }
+
 async function doLogout(){
   if(!sb) return;
   await sb.auth.signOut();
@@ -1558,7 +1714,7 @@ function checkKuis(){
   });
   const fb = document.getElementById('kuis_fb');
   fb.className = 'fb ' + (score>=7 ? 'ok' : 'bad');
-  fb.textContent = `Skor kamu: ${score}/10 ${score>=7 ? '🎉' : '💪 Ayo ulangi'}`;
+  fb.textContent = `Skor kamu: ${score}/10 ${score>=7 ? '🎉' : ' Ayo ulangi'}`;
 }
 window.checkKuis = checkKuis;
 window.renderKuis = renderKuis;
@@ -1570,7 +1726,6 @@ window.renderKuis = renderKuis;
   loadDB();
   renderDashboard();
   await initSupabase();
-  if(currentUser) await pullFromCloud();
 })();
 </script>
 </body>
