@@ -62,6 +62,8 @@ button.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
 button.ghost:hover{background:#eff6ff}
 button.danger{background:#fff;color:var(--bad);border:1px solid var(--bad)}
 button.danger:hover{background:#fef2f2}
+button.ok{background:#fff;color:var(--ok);border:1px solid var(--ok)}
+button.ok:hover{background:#f0fdf4}
 button.sm{padding:4px 8px;font-size:12px}
 input,select,textarea{padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:inherit;background:#fff;width:100%}
 input:focus,select:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:var(--brand)}
@@ -74,13 +76,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 tr:hover td{background:#fafbfc}
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
 .empty{padding:24px;text-align:center;color:var(--muted);font-size:13px}
-.badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);font-weight:500}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--soft);color:var(--muted);font-weight:500;display:inline-block}
 .badge.ok{background:#dcfce7;color:#166534}
 .badge.warn{background:#fef3c7;color:#92400e}
 .badge.bad{background:#fee2e2;color:#991b1b}
+.badge.info{background:#dbeafe;color:#1e40af}
+.progress{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:4px}
+.progress>i{display:block;height:100%;background:var(--ok);transition:.3s}
 #modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;align-items:center;justify-content:center;padding:20px}
 #modal.show{display:flex}
-.modal-box{background:#fff;border-radius:14px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal-box{background:#fff;border-radius:14px;max-width:820px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 .modal-box .head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0;z-index:1}
 .modal-box .head h3{font-size:16px}
 .modal-box .body{padding:18px 20px}
@@ -117,6 +122,8 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
 .authBox .sync.bad{color:#f87171}
 .authBox .sync.warn{color:#fbbf24}
 .authBox .sync.live{color:#22d3ee}
+.aging-cell{text-align:right;font-variant-numeric:tabular-nums;font-size:12px}
+.aging-cell.has{color:#dc2626;font-weight:600}
 @media(max-width:820px){
   #landing{padding:14px}
   .landing-card{padding:28px 22px;border-radius:16px}
@@ -158,26 +165,19 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
 
 <div id="landing">
   <div class="landing-card">
-    <div class="landing-logo">🔑</div>
+    <div class="landing-logo">🏢</div>
     <h1 class="landing-title">ERP Practice</h1>
     <p class="landing-sub">Accurate-like · Cloud Sync</p>
-
     <div class="landing-error" id="landingError"></div>
-
     <div class="landing-state on" id="landingLoading">
       <div class="spinner"></div>
       <p class="landing-loading-text">Memeriksa sesi…</p>
     </div>
-
     <div class="landing-state" id="landingLogin">
-      <span class="landing-badge">Portal Login</span>
-      <input class="landing-input" id="authEmail" type="email" placeholder="email"
-             autocapitalize="none" autocorrect="off" spellcheck="false"
-             autocomplete="email" inputmode="email">
+      <span class="landing-badge">🔐 Portal Login</span>
+      <input class="landing-input" id="authEmail" type="email" placeholder="email" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="email" inputmode="email">
       <div class="pw-wrap-landing">
-        <input class="landing-input" id="authPass" type="password" placeholder="password"
-               autocapitalize="none" autocorrect="off" spellcheck="false"
-               autocomplete="current-password">
+        <input class="landing-input" id="authPass" type="password" placeholder="password" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="current-password">
         <button type="button" class="pw-toggle-landing" onclick="togglePw()" aria-label="Tampilkan password">👁️</button>
       </div>
       <button class="landing-btn" onclick="doLogin()">Masuk</button>
@@ -191,41 +191,43 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
 <aside>
   <h1>🏢 ERP Practice</h1>
   <div class="sub">Accurate-like · Supabase Sync</div>
-
   <div class="authBox" id="authBox" style="display:none">
     <div class="user" id="authEmailShow"></div>
     <button class="sm ghost" onclick="doLogout()" style="width:100%">Logout</button>
     <div class="sync" id="syncStatus"></div>
   </div>
-
   <nav class="nav">
     <div class="navgrp">Utama</div>
-    <a data-target="dashboard" class="active">Dashboard</a>
-    <a data-target="perusahaan">Profil Perusahaan</a>
+    <a data-target="dashboard" class="active">📊 Dashboard</a>
+    <a data-target="perusahaan">🏭 Profil Perusahaan</a>
     <div class="navgrp">Master Data</div>
-    <a data-target="coa">Chart of Accounts</a>
-    <a data-target="customer">Pelanggan</a>
-    <a data-target="vendor">Pemasok</a>
-    <a data-target="barang">Barang & Jasa</a>
+    <a data-target="coa">📋 Chart of Accounts</a>
+    <a data-target="customer">👤 Pelanggan</a>
+    <a data-target="vendor">🚚 Pemasok</a>
+    <a data-target="barang">📦 Barang & Jasa</a>
     <div class="navgrp">Transaksi</div>
-    <a data-target="penjualan">Penjualan</a>
-    <a data-target="pembelian">Pembelian</a>
-    <a data-target="penerimaan">Penerimaan Kas</a>
-    <a data-target="pengeluaran">Pengeluaran Kas</a>
-    <a data-target="jurnalumum">Jurnal Umum</a>
+    <a data-target="penjualan">🧾 Penjualan</a>
+    <a data-target="pembelian">🛒 Pembelian</a>
+    <a data-target="penerimaan">💰 Penerimaan Kas</a>
+    <a data-target="pengeluaran">💸 Pengeluaran Kas</a>
+    <a data-target="jurnalumum">📒 Jurnal Umum</a>
     <div class="navgrp">Persediaan</div>
-    <a data-target="kartustok">Kartu Stok</a>
-    <a data-target="opname">Stock Opname</a>
+    <a data-target="kartustok">🗂️ Kartu Stok</a>
+    <a data-target="opname">🔍 Stock Opname</a>
+    <div class="navgrp">Piutang &amp; Utang</div>
+    <a data-target="lappiutang">📥 Laporan Piutang</a>
+    <a data-target="laputang">📤 Laporan Utang</a>
+    <a data-target="lapaging">⏰ Aging Piutang</a>
     <div class="navgrp">Laporan</div>
-    <a data-target="lapjurnal">Jurnal</a>
-    <a data-target="lapbuku">Buku Besar</a>
-    <a data-target="lapsaldo">Neraca Saldo</a>
-    <a data-target="laplr">Laba Rugi</a>
-    <a data-target="lapneraca">Neraca</a>
-    <a data-target="lapkas">Arus Kas</a>
+    <a data-target="lapjurnal">📑 Jurnal</a>
+    <a data-target="lapbuku">📖 Buku Besar</a>
+    <a data-target="lapsaldo">⚖️ Neraca Saldo</a>
+    <a data-target="laplr">📈 Laba Rugi</a>
+    <a data-target="lapneraca">🏦 Neraca</a>
+    <a data-target="lapkas">💵 Arus Kas</a>
     <div class="navgrp">Latihan</div>
-    <a data-target="roadmap">Roadmap</a>
-    <a data-target="kuis">Kuis</a>
+    <a data-target="roadmap">🗺️ Roadmap</a>
+    <a data-target="kuis">❓ Kuis</a>
   </nav>
 </aside>
 <main>
@@ -242,6 +244,9 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
   <section id="jurnalumum"></section>
   <section id="kartustok"></section>
   <section id="opname"></section>
+  <section id="lappiutang"></section>
+  <section id="laputang"></section>
+  <section id="lapaging"></section>
   <section id="lapjurnal"></section>
   <section id="lapbuku"></section>
   <section id="lapsaldo"></section>
@@ -269,6 +274,8 @@ const LS = 'erpPractice_v1';
 const uid = () => Math.random().toString(36).slice(2,10);
 const fmt = n => 'Rp ' + (Number(n)||0).toLocaleString('id-ID');
 const today = () => new Date().toISOString().slice(0,10);
+const addDays = (dateStr, days) => { const d = new Date(dateStr); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); };
+const daysBetween = (a,b) => Math.floor((new Date(b) - new Date(a)) / 86400000);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(msg,type='ok'){
   const d=document.createElement('div');d.textContent=msg;
@@ -309,22 +316,48 @@ let sb = null;
 let currentUser = null;
 let pushTimer = null;
 let isPulling = false;
-let lastPushTime = 0;          // [BARU] untuk hindari echo push sendiri
-let realtimeChannel = null;    // [BARU] channel realtime aktif
+let lastPushTime = 0;
+let realtimeChannel = null;
 
 function freshDB(){
   return {
     company:{nama:'Klinik & Toko Alat Kesehatan Sragen Jaya',alamat:'Jl. Raya Sragen No. 1',telp:'0271-123456',npwp:'01.234.567.8-901.000'},
     coa:JSON.parse(JSON.stringify(COA_DEFAULT)),
     customers:[],vendors:[],items:[],
-    journals:[],invoices:[],purchases:[],
+    journals:[],invoices:[],purchases:[],payments:[],
     counters:{inv:0,pur:0,jv:0}
   };
+}
+
+/* [BARU] Migrasi data lama → tambah field AR/AP */
+function migrateDB(){
+  let changed = false;
+  DB.invoices = DB.invoices || [];
+  DB.purchases = DB.purchases || [];
+  DB.payments = DB.payments || [];
+  DB.invoices.forEach(v=>{
+    if(v.paidAmount === undefined){
+      v.paidAmount = v.bayar === 'kredit' ? 0 : v.total;
+      v.status = v.bayar === 'kredit' ? 'belum' : 'lunas';
+      v.dueDate = v.dueDate || addDays(v.tanggal, 30);
+      changed = true;
+    }
+  });
+  DB.purchases.forEach(v=>{
+    if(v.paidAmount === undefined){
+      v.paidAmount = v.bayar === 'kredit' ? 0 : v.total;
+      v.status = v.bayar === 'kredit' ? 'belum' : 'lunas';
+      v.dueDate = v.dueDate || addDays(v.tanggal, 30);
+      changed = true;
+    }
+  });
+  return changed;
 }
 
 function loadDB(){
   try{DB = JSON.parse(localStorage.getItem(LS)) || null}catch(e){DB=null}
   if(!DB || !DB.coa) DB = freshDB();
+  migrateDB();
 }
 
 function save(){
@@ -401,7 +434,7 @@ async function pushToCloud(){
     setSync('⚠️ Gagal: ' + error.message, 'bad');
     console.error(error);
   }else{
-    lastPushTime = Date.now();  // [BARU] tanda kita baru push, skip echo realtime
+    lastPushTime = Date.now();
     setSync('✅ Tersinkron ' + new Date().toLocaleTimeString('id-ID'), 'ok');
   }
 }
@@ -418,6 +451,7 @@ async function pullFromCloud(){
   }
   if(data && data.data && data.data.coa){
     DB = data.data;
+    migrateDB();
     localStorage.setItem(LS, JSON.stringify(DB));
     setSync('✅ Dimuat dari cloud', 'ok');
     const active = document.querySelector('.nav a.active');
@@ -427,40 +461,27 @@ async function pullFromCloud(){
   }
 }
 
-/* [BARU] ---------- REALTIME SYNC ---------- */
 function subscribeRealtime(){
   if(!sb || !currentUser) return;
-  if(realtimeChannel) return; // sudah aktif
-
+  if(realtimeChannel) return;
   realtimeChannel = sb.channel('erp_sync_' + currentUser.id)
     .on('postgres_changes',
       { event: '*', schema: 'public', table: 'erp_data', filter: `user_id=eq.${currentUser.id}` },
       (payload) => {
-        // Abaikan kalau tidak ada data
         if(!payload.new || !payload.new.data) return;
-
-        // Abaikan echo dari push kita sendiri (dalam 3 detik terakhir)
         if(Date.now() - lastPushTime < 3000) return;
-
-        // Terapkan perubahan dari device lain
         isPulling = true;
         DB = payload.new.data;
+        migrateDB();
         localStorage.setItem(LS, JSON.stringify(DB));
         isPulling = false;
-
-        // Re-render halaman yang sedang aktif
         const active = document.querySelector('.nav a.active');
         if(active && pages[active.dataset.target]) pages[active.dataset.target]();
         setSync('🔄 Diperbarui dari device lain ' + new Date().toLocaleTimeString('id-ID'), 'live');
       })
     .subscribe((status) => {
-      if(status === 'SUBSCRIBED'){
-        setSync('🟢 Live sync aktif', 'live');
-      }else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
-        setSync('⚠️ Realtime terputus, coba refresh', 'bad');
-      }else if(status === 'CLOSED'){
-        setSync('⚪ Realtime ditutup', 'warn');
-      }
+      if(status === 'SUBSCRIBED') setSync('🟢 Live sync aktif', 'live');
+      else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setSync('⚠️ Realtime terputus', 'bad');
     });
 }
 
@@ -477,30 +498,20 @@ async function initSupabase(){
     showApp();
     return;
   }
-
-  // [UBAH] tambahkan opsi persist session + auto refresh
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'erp-auth'
-    }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'erp-auth' }
   });
-
   let session = null;
   try{
     const res = await sb.auth.getSession();
     session = res.data.session;
-  }catch(e){
-    console.error(e);
-  }
+  }catch(e){ console.error(e); }
   currentUser = session ? session.user : null;
 
   if(currentUser){
     await pullFromCloud();
     showApp();
-    subscribeRealtime();  // [BARU]
+    subscribeRealtime();
   }else{
     document.getElementById('landingLoading').classList.remove('on');
     document.getElementById('landingLogin').classList.add('on');
@@ -510,46 +521,36 @@ async function initSupabase(){
   sb.auth.onAuthStateChange((event, sess) => {
     currentUser = sess ? sess.user : null;
     renderAuthUI();
-
     if(event === 'SIGNED_IN' && currentUser){
       setTimeout(async () => {
         await pullFromCloud();
         showApp();
-        subscribeRealtime();  // [BARU]
+        subscribeRealtime();
         toast('Login berhasil');
       }, 0);
     }
-    if(event === 'TOKEN_REFRESHED'){
-      // Token diperbarui otomatis, tidak perlu aksi
-    }
     if(event === 'SIGNED_OUT'){
-      unsubscribeRealtime();  // [BARU]
+      unsubscribeRealtime();
       showLanding();
     }
   });
 
-  // [BARU] Refresh saat tab kembali aktif — fallback kalau realtime drop
   document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState === 'visible' && currentUser && sb){
-      pullFromCloud();
-    }
+    if(document.visibilityState === 'visible' && currentUser && sb) pullFromCloud();
   });
 
-  // [BARU] Cross-tab sync di device yang sama (antar tab browser)
   window.addEventListener('storage', (e) => {
     if(e.key === LS && e.newValue && !isPulling){
       try{
         DB = JSON.parse(e.newValue);
+        migrateDB();
         const active = document.querySelector('.nav a.active');
         if(active && pages[active.dataset.target]) pages[active.dataset.target]();
       }catch(x){}
     }
   });
 
-  // [BARU] Refresh saat device kembali online setelah offline
-  window.addEventListener('online', () => {
-    if(currentUser) pullFromCloud();
-  });
+  window.addEventListener('online', () => { if(currentUser) pullFromCloud(); });
 }
 
 /* =========================================================
@@ -558,15 +559,8 @@ async function initSupabase(){
 function togglePw(){
   const inp = document.getElementById('authPass');
   const btn = inp.parentElement.querySelector('.pw-toggle-landing');
-  if(inp.type === 'password'){
-    inp.type = 'text';
-    btn.textContent = '🙈';
-    btn.setAttribute('aria-label','Sembunyikan password');
-  }else{
-    inp.type = 'password';
-    btn.textContent = '👁️';
-    btn.setAttribute('aria-label','Tampilkan password');
-  }
+  if(inp.type === 'password'){ inp.type = 'text'; btn.textContent = '🙈'; }
+  else{ inp.type = 'password'; btn.textContent = '👁️'; }
 }
 window.togglePw = togglePw;
 
@@ -579,40 +573,25 @@ async function doSignup(){
   const pass = authPass.value;
   if(!email || pass.length < 6) return showLandingError('Email valid & password minimal 6 karakter.');
   document.getElementById('landingError').classList.remove('on');
-
   const { error } = await sb.auth.signUp({ email, password: pass });
   if(error) return showLandingError('Gagal daftar: ' + error.message);
   toast('Pendaftaran berhasil. Cek email (jika konfirmasi aktif).');
 }
-
 async function doLogin(){
   if(!sb) return toast('Supabase belum dikonfigurasi','bad');
   const email = authEmail.value.trim().toLowerCase();
   const pass = authPass.value;
-
-  // Debug: apa yang benar-benar dikirim
-  console.log('LOGIN ATTEMPT');
-  console.log('  email length :', email.length, '| raw:', JSON.stringify(authEmail.value));
-  console.log('  pass length  :', pass.length,  '| raw:', JSON.stringify(pass));
-  console.log('  email chars  :', [...email].map(c=>c.charCodeAt(0)).join(','));
-
   if(!email || !pass) return showLandingError('Isi email & password.');
   document.getElementById('landingError').classList.remove('on');
-
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-
-  console.log('LOGIN RESPONSE:', { data, error });
-
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   if(error){
-    // Tampilkan pesan ASLI dari Supabase, jangan disamarkan
-    showLandingError('Supabase bilang: "' + error.message + '" (status ' + (error.status||'?') + ')');
-    return;
+    if(/invalid/i.test(error.message)) return showLandingError('Email atau password salah.');
+    return showLandingError('Error: ' + error.message);
   }
 }
-
 async function doLogout(){
   if(!sb) return;
-  unsubscribeRealtime();  // [BARU]
+  unsubscribeRealtime();
   await sb.auth.signOut();
   currentUser = null;
   renderAuthUI();
@@ -647,6 +626,49 @@ function postJournal({tanggal, ref, ket, lines, source}){
   return j;
 }
 
+/* [BARU] Helper AR/AP */
+function getStatusLabel(status){
+  if(status === 'lunas') return '<span class="badge ok">Lunas</span>';
+  if(status === 'sebagian') return '<span class="badge warn">Sebagian</span>';
+  return '<span class="badge bad">Belum Bayar</span>';
+}
+function getSisaInvoice(v){ return (v.total||0) - (v.paidAmount||0); }
+function totalPiutangOutstanding(){
+  return (DB.invoices||[]).reduce((s,v)=>{
+    if(v.bayar !== 'kredit') return s;
+    return s + getSisaInvoice(v);
+  }, 0);
+}
+function totalUtangOutstanding(){
+  return (DB.purchases||[]).reduce((s,v)=>{
+    if(v.bayar !== 'kredit') return s;
+    return s + getSisaInvoice(v);
+  }, 0);
+}
+function totalPiutangLewatTempo(){
+  const t = today();
+  return (DB.invoices||[]).reduce((s,v)=>{
+    if(v.bayar !== 'kredit') return s;
+    if(getSisaInvoice(v) <= 0) return s;
+    if(!v.dueDate || v.dueDate >= t) return s;
+    return s + getSisaInvoice(v);
+  }, 0);
+}
+function piutangPerCustomer(custId){
+  return (DB.invoices||[]).reduce((s,v)=>{
+    if(v.customerId !== custId) return s;
+    if(v.bayar !== 'kredit') return s;
+    return s + getSisaInvoice(v);
+  }, 0);
+}
+function utangPerVendor(vendId){
+  return (DB.purchases||[]).reduce((s,v)=>{
+    if(v.vendorId !== vendId) return s;
+    if(v.bayar !== 'kredit') return s;
+    return s + getSisaInvoice(v);
+  }, 0);
+}
+
 /* =========================================================
    NAV
 ========================================================= */
@@ -656,6 +678,7 @@ const pages = {
   penjualan:renderPenjualan, pembelian:renderPembelian,
   penerimaan:renderPenerimaan, pengeluaran:renderPengeluaran, jurnalumum:renderJurnalUmum,
   kartustok:renderKartuStok, opname:renderOpname,
+  lappiutang:renderLapPiutang, laputang:renderLapUtang, lapaging:renderLapAging,
   lapjurnal:renderLapJurnal, lapbuku:renderLapBuku, lapsaldo:renderLapSaldo,
   laplr:renderLapLR, lapneraca:renderLapNeraca, lapkas:renderLapKas,
   roadmap:renderRoadmap, kuis:renderKuis
@@ -695,6 +718,9 @@ function renderDashboard(){
   const pendapatan = DB.coa.filter(a=>a.tipe==='Pendapatan').reduce((s,a)=>s+saldo(a.kode),0);
   const beban = DB.coa.filter(a=>a.tipe==='Beban').reduce((s,a)=>s+saldo(a.kode),0);
   const laba = pendapatan - beban;
+  const outPiutang = totalPiutangOutstanding();
+  const outUtang = totalUtangOutstanding();
+  const lewatTempo = totalPiutangLewatTempo();
 
   document.getElementById('dashboard').innerHTML = `
     <h2>Dashboard</h2>
@@ -702,21 +728,21 @@ function renderDashboard(){
     <div class="grid">
       <div class="stat"><div class="label">Kas</div><div class="val">${fmt(kas)}</div></div>
       <div class="stat"><div class="label">Bank</div><div class="val">${fmt(bank)}</div></div>
-      <div class="stat"><div class="label">Piutang</div><div class="val">${fmt(piutang)}</div></div>
-      <div class="stat"><div class="label">Utang</div><div class="val">${fmt(utang)}</div></div>
+      <div class="stat"><div class="label">Piutang Outstanding</div><div class="val">${fmt(outPiutang)}</div></div>
+      <div class="stat"><div class="label">Utang Outstanding</div><div class="val">${fmt(outUtang)}</div></div>
+      <div class="stat"><div class="label">Piutang Lewat Tempo</div><div class="val" style="color:#dc2626">${fmt(lewatTempo)}</div></div>
       <div class="stat"><div class="label">Pendapatan</div><div class="val">${fmt(pendapatan)}</div></div>
       <div class="stat"><div class="label">Beban</div><div class="val">${fmt(beban)}</div></div>
       <div class="stat"><div class="label">Laba / Rugi</div><div class="val" style="color:${laba>=0?'#16a34a':'#dc2626'}">${fmt(laba)}</div></div>
-      <div class="stat"><div class="label">Total Jurnal</div><div class="val">${DB.journals.length}</div></div>
     </div>
     <div class="card" style="margin-top:14px">
       <h3 class="sec" style="margin-top:0">Aksi Cepat</h3>
       <div class="row">
         <button onclick="goto('penjualan')">+ Penjualan</button>
         <button onclick="goto('pembelian')">+ Pembelian</button>
-        <button onclick="goto('penerimaan')">+ Penerimaan Kas</button>
-        <button onclick="goto('pengeluaran')">+ Pengeluaran Kas</button>
-        <button class="ghost" onclick="goto('jurnalumum')">+ Jurnal Umum</button>
+        <button onclick="goto('lappiutang')">📥 Lihat Piutang</button>
+        <button onclick="goto('laputang')">📤 Lihat Utang</button>
+        <button class="ghost" onclick="goto('lapaging')">⏰ Aging Piutang</button>
       </div>
     </div>
     <div class="card">
@@ -759,7 +785,7 @@ function importData(e){
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
   r.onload = () => {
-    try{ DB = JSON.parse(r.result); save(); toast('Data diimport'); goto('dashboard') }
+    try{ DB = JSON.parse(r.result); migrateDB(); save(); toast('Data diimport'); goto('dashboard') }
     catch(x){ toast('File tidak valid','bad') }
   };
   r.readAsText(f);
@@ -800,9 +826,7 @@ function renderCOA(){
   document.getElementById('coa').innerHTML = `
     <h2>Chart of Accounts</h2>
     <p class="sub">Daftar akun yang dipakai untuk posting jurnal.</p>
-    <div class="row" style="margin-bottom:10px">
-      <button onclick="editCOA()">+ Tambah Akun</button>
-    </div>
+    <div class="row" style="margin-bottom:10px"><button onclick="editCOA()">+ Tambah Akun</button></div>
     ${groups.map(g=>{
       const rows = DB.coa.filter(a=>a.tipe===g).sort((a,b)=>a.kode.localeCompare(b.kode));
       if(!rows.length) return '';
@@ -849,14 +873,12 @@ function saveCOA(oldKode){
 }
 function delCOA(kode){
   const used = DB.journals.some(j=>j.lines.some(l=>l.kode===kode));
-  if(used) return toast('Akun sudah dipakai di jurnal, tidak bisa dihapus','bad');
+  if(used) return toast('Akun sudah dipakai di jurnal','bad');
   if(!confirm('Hapus akun ini?')) return;
   DB.coa = DB.coa.filter(a=>a.kode!==kode);
   save(); renderCOA(); toast('Terhapus');
 }
-window.editCOA = editCOA;
-window.saveCOA = saveCOA;
-window.delCOA = delCOA;
+window.editCOA = editCOA; window.saveCOA = saveCOA; window.delCOA = delCOA;
 
 /* =========================================================
    CUSTOMER
@@ -868,10 +890,19 @@ function renderCustomer(){
     <div class="card" style="padding:0;margin-top:12px">
     ${DB.customers.length===0 ? '<div class="empty">Belum ada pelanggan</div>' : `
     <div class="tbl-wrap" style="border:0">
-    <table><tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th></th></tr>
-      ${DB.customers.map(c=>`<tr><td>${esc(c.nama)}</td><td>${esc(c.telp)}</td><td>${esc(c.alamat)}</td>
-      <td style="text-align:right"><button class="sm ghost" onclick="editCust('${c.id}')">Edit</button>
-      <button class="sm danger" onclick="delCust('${c.id}')">×</button></td></tr>`).join('')}
+    <table><tr><th>Nama</th><th>Telepon</th><th class="num">Piutang</th><th></th></tr>
+      ${DB.customers.map(c=>{
+        const piu = piutangPerCustomer(c.id);
+        return `<tr>
+          <td><a style="color:var(--brand);cursor:pointer;font-weight:600" onclick="showDetailCustomer('${c.id}')">${esc(c.nama)}</a></td>
+          <td>${esc(c.telp)}</td>
+          <td class="num">${piu>0?'<b style="color:#dc2626">'+fmt(piu)+'</b>':'-'}</td>
+          <td style="text-align:right">
+            <button class="sm ghost" onclick="showDetailCustomer('${c.id}')">Detail</button>
+            <button class="sm ghost" onclick="editCust('${c.id}')">Edit</button>
+            <button class="sm danger" onclick="delCust('${c.id}')">×</button>
+          </td></tr>`;
+      }).join('')}
     </table></div>`}</div>`;
 }
 function editCust(id){
@@ -890,10 +921,50 @@ function saveCust(id){
   }else DB.customers.push({id:uid(), nama, telp:cu_telp.value, alamat:cu_alamat.value});
   save(); closeModal(); renderCustomer(); toast('Tersimpan');
 }
-function delCust(id){ if(!confirm('Hapus?')) return; DB.customers = DB.customers.filter(c=>c.id!==id); save(); renderCustomer() }
-window.editCust = editCust;
-window.saveCust = saveCust;
-window.delCust = delCust;
+function delCust(id){
+  const used = DB.invoices.some(v=>v.customerId === id);
+  if(used) return toast('Pelanggan sudah punya invoice, tidak bisa dihapus','bad');
+  if(!confirm('Hapus?')) return;
+  DB.customers = DB.customers.filter(c=>c.id!==id); save(); renderCustomer();
+}
+window.editCust = editCust; window.saveCust = saveCust; window.delCust = delCust;
+
+/* [BARU] Detail Pelanggan */
+function showDetailCustomer(id){
+  const c = DB.customers.find(x=>x.id===id);
+  if(!c) return;
+  const invs = (DB.invoices||[]).filter(v=>v.customerId===id).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  const totalPiutang = piutangPerCustomer(id);
+  const totalPenjualan = invs.reduce((s,v)=>s+v.total, 0);
+  openModal('Detail Pelanggan: ' + c.nama, `
+    <div class="grid" style="margin-bottom:14px">
+      <div class="stat"><div class="label">Total Penjualan</div><div class="val">${fmt(totalPenjualan)}</div></div>
+      <div class="stat"><div class="label">Piutang Outstanding</div><div class="val" style="color:#dc2626">${fmt(totalPiutang)}</div></div>
+      <div class="stat"><div class="label">Jumlah Invoice</div><div class="val">${invs.length}</div></div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:12px">
+      📞 ${esc(c.telp||'-')} · 📍 ${esc(c.alamat||'-')}
+    </p>
+    <h3 class="sec">Riwayat Invoice</h3>
+    ${invs.length === 0 ? '<div class="empty">Belum ada invoice</div>' : `
+    <div class="tbl-wrap"><table>
+      <tr><th>No</th><th>Tanggal</th><th>Jatuh Tempo</th><th class="num">Total</th><th class="num">Sisa</th><th>Status</th><th></th></tr>
+      ${invs.map(v=>{
+        const sisa = getSisaInvoice(v);
+        const lewat = v.bayar==='kredit' && sisa>0 && v.dueDate && v.dueDate < today();
+        return `<tr>
+          <td>${v.no}</td><td>${v.tanggal}</td>
+          <td>${v.bayar==='kredit'?v.dueDate:'-'}${lewat?' <span class="badge bad">Lewat</span>':''}</td>
+          <td class="num">${fmt(v.total)}</td>
+          <td class="num">${sisa>0?'<b style="color:#dc2626">'+fmt(sisa)+'</b>':'-'}</td>
+          <td>${getStatusLabel(v.status)}</td>
+          <td style="text-align:right">${sisa>0?`<button class="sm ok" onclick="closeModal();openPelunasanInvoice('${v.id}')">Lunasi</button>`:''}</td>
+        </tr>`;
+      }).join('')}
+    </table></div>`}
+  `);
+}
+window.showDetailCustomer = showDetailCustomer;
 
 /* =========================================================
    VENDOR
@@ -905,10 +976,19 @@ function renderVendor(){
     <div class="card" style="padding:0;margin-top:12px">
     ${DB.vendors.length===0 ? '<div class="empty">Belum ada vendor</div>' : `
     <div class="tbl-wrap" style="border:0">
-    <table><tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th></th></tr>
-      ${DB.vendors.map(c=>`<tr><td>${esc(c.nama)}</td><td>${esc(c.telp)}</td><td>${esc(c.alamat)}</td>
-      <td style="text-align:right"><button class="sm ghost" onclick="editVend('${c.id}')">Edit</button>
-      <button class="sm danger" onclick="delVend('${c.id}')">×</button></td></tr>`).join('')}
+    <table><tr><th>Nama</th><th>Telepon</th><th class="num">Utang</th><th></th></tr>
+      ${DB.vendors.map(c=>{
+        const ut = utangPerVendor(c.id);
+        return `<tr>
+          <td><a style="color:var(--brand);cursor:pointer;font-weight:600" onclick="showDetailVendor('${c.id}')">${esc(c.nama)}</a></td>
+          <td>${esc(c.telp)}</td>
+          <td class="num">${ut>0?'<b style="color:#dc2626">'+fmt(ut)+'</b>':'-'}</td>
+          <td style="text-align:right">
+            <button class="sm ghost" onclick="showDetailVendor('${c.id}')">Detail</button>
+            <button class="sm ghost" onclick="editVend('${c.id}')">Edit</button>
+            <button class="sm danger" onclick="delVend('${c.id}')">×</button>
+          </td></tr>`;
+      }).join('')}
     </table></div>`}</div>`;
 }
 function editVend(id){
@@ -927,10 +1007,49 @@ function saveVend(id){
   }else DB.vendors.push({id:uid(), nama, telp:ve_telp.value, alamat:ve_alamat.value});
   save(); closeModal(); renderVendor(); toast('Tersimpan');
 }
-function delVend(id){ if(!confirm('Hapus?')) return; DB.vendors = DB.vendors.filter(c=>c.id!==id); save(); renderVendor() }
-window.editVend = editVend;
-window.saveVend = saveVend;
-window.delVend = delVend;
+function delVend(id){
+  const used = DB.purchases.some(v=>v.vendorId === id);
+  if(used) return toast('Vendor sudah punya faktur, tidak bisa dihapus','bad');
+  if(!confirm('Hapus?')) return;
+  DB.vendors = DB.vendors.filter(c=>c.id!==id); save(); renderVendor();
+}
+window.editVend = editVend; window.saveVend = saveVend; window.delVend = delVend;
+
+function showDetailVendor(id){
+  const c = DB.vendors.find(x=>x.id===id);
+  if(!c) return;
+  const purs = (DB.purchases||[]).filter(v=>v.vendorId===id).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+  const totalUtang = utangPerVendor(id);
+  const totalPembelian = purs.reduce((s,v)=>s+v.total, 0);
+  openModal('Detail Vendor: ' + c.nama, `
+    <div class="grid" style="margin-bottom:14px">
+      <div class="stat"><div class="label">Total Pembelian</div><div class="val">${fmt(totalPembelian)}</div></div>
+      <div class="stat"><div class="label">Utang Outstanding</div><div class="val" style="color:#dc2626">${fmt(totalUtang)}</div></div>
+      <div class="stat"><div class="label">Jumlah Faktur</div><div class="val">${purs.length}</div></div>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:12px">
+      📞 ${esc(c.telp||'-')} · 📍 ${esc(c.alamat||'-')}
+    </p>
+    <h3 class="sec">Riwayat Faktur Pembelian</h3>
+    ${purs.length === 0 ? '<div class="empty">Belum ada faktur</div>' : `
+    <div class="tbl-wrap"><table>
+      <tr><th>No</th><th>Tanggal</th><th>Jatuh Tempo</th><th class="num">Total</th><th class="num">Sisa</th><th>Status</th><th></th></tr>
+      ${purs.map(v=>{
+        const sisa = getSisaInvoice(v);
+        const lewat = v.bayar==='kredit' && sisa>0 && v.dueDate && v.dueDate < today();
+        return `<tr>
+          <td>${v.no}</td><td>${v.tanggal}</td>
+          <td>${v.bayar==='kredit'?v.dueDate:'-'}${lewat?' <span class="badge bad">Lewat</span>':''}</td>
+          <td class="num">${fmt(v.total)}</td>
+          <td class="num">${sisa>0?'<b style="color:#dc2626">'+fmt(sisa)+'</b>':'-'}</td>
+          <td>${getStatusLabel(v.status)}</td>
+          <td style="text-align:right">${sisa>0?`<button class="sm ok" onclick="closeModal();openPelunasanPurchase('${v.id}')">Bayar</button>`:''}</td>
+        </tr>`;
+      }).join('')}
+    </table></div>`}
+  `);
+}
+window.showDetailVendor = showDetailVendor;
 
 /* =========================================================
    BARANG
@@ -967,18 +1086,13 @@ function editBarang(id){
 }
 function saveBarang(id){
   const nama = b_nama.value.trim(); if(!nama) return toast('Nama wajib','bad');
-  const data = {
-    kode:b_kode.value, nama, satuan:b_satuan.value,
-    hargaBeli:+b_beli.value||0, hargaJual:+b_jual.value||0, stok:+b_stok.value||0
-  };
+  const data = {kode:b_kode.value, nama, satuan:b_satuan.value, hargaBeli:+b_beli.value||0, hargaJual:+b_jual.value||0, stok:+b_stok.value||0};
   if(id) Object.assign(DB.items.find(x=>x.id===id), data);
   else DB.items.push({id:uid(), ...data});
   save(); closeModal(); renderBarang(); toast('Tersimpan');
 }
 function delBarang(id){ if(!confirm('Hapus?')) return; DB.items = DB.items.filter(x=>x.id!==id); save(); renderBarang() }
-window.editBarang = editBarang;
-window.saveBarang = saveBarang;
-window.delBarang = delBarang;
+window.editBarang = editBarang; window.saveBarang = saveBarang; window.delBarang = delBarang;
 
 /* =========================================================
    PENJUALAN
@@ -996,35 +1110,50 @@ function renderPenjualan(){
           ${DB.customers.map(c=>`<option value="${c.id}">${esc(c.nama)}</option>`).join('')}
         </select></label>
       </div>
-      <label class="f"><span>Pembayaran</span><select id="inv_bayar">
-        <option value="tunai">Tunai (Kas)</option>
-        <option value="transfer">Transfer (Bank)</option>
-        <option value="kredit">Kredit (Piutang)</option>
-      </select></label>
+      <div class="split">
+        <label class="f"><span>Pembayaran</span><select id="inv_bayar" onchange="toggleDueDate()">
+          <option value="tunai">Tunai (Kas)</option>
+          <option value="transfer">Transfer (Bank)</option>
+          <option value="kredit">Kredit (Piutang)</option>
+        </select></label>
+        <label class="f" id="inv_due_wrap" style="display:none"><span>Jatuh Tempo</span><input type="date" id="inv_due" value="${addDays(today(),30)}"></label>
+      </div>
       <h3 class="sec">Item</h3>
       <div id="inv_items"></div>
       <button class="ghost sm" onclick="addInvLine()">+ Tambah Baris</button>
       <div style="text-align:right;margin-top:10px;font-size:15px">Total: <b id="inv_total">Rp 0</b></div>
-      <div class="row end" style="margin-top:10px">
-        <button onclick="saveInvoice()">Simpan Invoice</button>
-      </div>
+      <div class="row end" style="margin-top:10px"><button onclick="saveInvoice()">Simpan Invoice</button></div>
     </div>
     <div class="card" style="padding:0">
       <div style="padding:12px 14px;background:var(--soft);font-weight:600;font-size:13px">Riwayat Invoice</div>
       ${DB.invoices.length===0 ? '<div class="empty">Belum ada invoice</div>' : `
       <div class="tbl-wrap" style="border:0">
-      <table><tr><th>No</th><th>Tanggal</th><th>Pelanggan</th><th>Bayar</th><th class="num">Total</th><th></th></tr>
+      <table><tr><th>No</th><th>Tanggal</th><th>Pelanggan</th><th>Bayar</th><th class="num">Total</th><th>Status</th><th></th></tr>
       ${DB.invoices.slice().reverse().map(v=>{
         const c = DB.customers.find(x=>x.id===v.customerId);
-        return `<tr><td>${v.no}</td><td>${v.tanggal}</td><td>${esc(c?c.nama:'Umum')}</td>
-        <td><span class="badge ${v.bayar==='kredit'?'warn':'ok'}">${v.bayar}</span></td>
-        <td class="num">${fmt(v.total)}</td>
-        <td style="text-align:right"><button class="sm danger" onclick="delInvoice('${v.id}')">×</button></td></tr>`;
+        const sisa = getSisaInvoice(v);
+        return `<tr>
+          <td>${v.no}</td><td>${v.tanggal}</td>
+          <td>${esc(c?c.nama:'Umum')}</td>
+          <td><span class="badge ${v.bayar==='kredit'?'warn':'ok'}">${v.bayar}</span></td>
+          <td class="num">${fmt(v.total)}</td>
+          <td>${getStatusLabel(v.status)}</td>
+          <td style="text-align:right">
+            ${sisa>0?`<button class="sm ok" onclick="openPelunasanInvoice('${v.id}')">Lunasi</button>`:''}
+            <button class="sm danger" onclick="delInvoice('${v.id}')">×</button>
+          </td>
+        </tr>`;
       }).join('')}
       </table></div>`}
     </div>`;
   renderInvLines();
 }
+function toggleDueDate(){
+  const b = document.getElementById('inv_bayar').value;
+  document.getElementById('inv_due_wrap').style.display = b==='kredit' ? 'block' : 'none';
+}
+window.toggleDueDate = toggleDueDate;
+
 function renderInvLines(){
   document.getElementById('inv_items').innerHTML = invLines.map((l,i)=>`
     <div class="jline">
@@ -1041,17 +1170,12 @@ function renderInvLines(){
 }
 function invChange(i, field, val){
   invLines[i][field] = val;
-  if(field==='itemId'){
-    const x = DB.items.find(a=>a.id===val);
-    if(x) invLines[i].harga = x.hargaJual;
-  }
+  if(field==='itemId'){ const x = DB.items.find(a=>a.id===val); if(x) invLines[i].harga = x.hargaJual; }
   renderInvLines();
 }
 function addInvLine(){ invLines.push({itemId:'', qty:1, harga:0}); renderInvLines() }
 function invDel(i){ invLines.splice(i,1); if(!invLines.length) invLines.push({itemId:'', qty:1, harga:0}); renderInvLines() }
-window.addInvLine = addInvLine;
-window.invDel = invDel;
-window.invChange = invChange;
+window.addInvLine = addInvLine; window.invDel = invDel; window.invChange = invChange;
 
 function saveInvoice(){
   const valid = invLines.filter(l=>l.itemId && l.qty>0);
@@ -1063,12 +1187,9 @@ function saveInvoice(){
   }
   const total = valid.reduce((s,l)=>s+l.qty*l.harga,0);
   const hpp = valid.reduce((s,l)=>{ const it=DB.items.find(x=>x.id===l.itemId); return s + l.qty*(it.hargaBeli||0) },0);
-
   DB.counters.inv = (DB.counters.inv||0) + 1;
   const no = 'INV-' + String(DB.counters.inv).padStart(4,'0');
-
   valid.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); it.stok -= l.qty });
-
   const cust = DB.customers.find(c=>c.id===customerId);
   const lines = [];
   const kasKode = bayar==='kredit' ? '1101' : (bayar==='transfer' ? '1002' : '1001');
@@ -1079,10 +1200,14 @@ function saveInvoice(){
     lines.push({kode:'1201', debit:0, kredit:hpp});
   }
   const j = postJournal({tanggal, ref:no, ket:`Penjualan ke ${cust?cust.nama:'Umum'}`, lines, source:'invoice'});
-  DB.invoices.push({id:j.id, no, tanggal, customerId, bayar, total, hpp, items:valid.map(l=>({...l}))});
-  save();
-  renderPenjualan();
-  toast('Invoice disimpan & jurnal diposting');
+  DB.invoices.push({
+    id:j.id, no, tanggal, customerId, bayar, total, hpp,
+    paidAmount: bayar==='kredit' ? 0 : total,
+    status: bayar==='kredit' ? 'belum' : 'lunas',
+    dueDate: bayar==='kredit' ? (inv_due.value || addDays(tanggal,30)) : null,
+    items: valid.map(l=>({...l}))
+  });
+  save(); renderPenjualan(); toast('Invoice disimpan & jurnal diposting');
 }
 function delInvoice(id){
   if(!confirm('Hapus invoice beserta jurnalnya? Stok akan dikembalikan.')) return;
@@ -1090,10 +1215,10 @@ function delInvoice(id){
   inv.items.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); if(it) it.stok += l.qty });
   DB.journals = DB.journals.filter(j=>j.id!==id);
   DB.invoices = DB.invoices.filter(v=>v.id!==id);
+  DB.payments = DB.payments.filter(p=>p.refId !== id);
   save(); renderPenjualan(); toast('Terhapus');
 }
-window.saveInvoice = saveInvoice;
-window.delInvoice = delInvoice;
+window.saveInvoice = saveInvoice; window.delInvoice = delInvoice;
 
 /* =========================================================
    PEMBELIAN
@@ -1111,11 +1236,14 @@ function renderPembelian(){
           ${DB.vendors.map(v=>`<option value="${v.id}">${esc(v.nama)}</option>`).join('')}
         </select></label>
       </div>
-      <label class="f"><span>Pembayaran</span><select id="pur_bayar">
-        <option value="tunai">Tunai (Kas)</option>
-        <option value="transfer">Transfer (Bank)</option>
-        <option value="kredit">Kredit (Utang Usaha)</option>
-      </select></label>
+      <div class="split">
+        <label class="f"><span>Pembayaran</span><select id="pur_bayar" onchange="togglePurDueDate()">
+          <option value="tunai">Tunai (Kas)</option>
+          <option value="transfer">Transfer (Bank)</option>
+          <option value="kredit">Kredit (Utang Usaha)</option>
+        </select></label>
+        <label class="f" id="pur_due_wrap" style="display:none"><span>Jatuh Tempo</span><input type="date" id="pur_due" value="${addDays(today(),30)}"></label>
+      </div>
       <h3 class="sec">Item</h3>
       <div id="pur_items"></div>
       <button class="ghost sm" onclick="addPurLine()">+ Tambah Baris</button>
@@ -1126,18 +1254,32 @@ function renderPembelian(){
       <div style="padding:12px 14px;background:var(--soft);font-weight:600;font-size:13px">Riwayat Pembelian</div>
       ${DB.purchases.length===0 ? '<div class="empty">Belum ada pembelian</div>' : `
       <div class="tbl-wrap" style="border:0">
-      <table><tr><th>No</th><th>Tanggal</th><th>Vendor</th><th>Bayar</th><th class="num">Total</th><th></th></tr>
+      <table><tr><th>No</th><th>Tanggal</th><th>Vendor</th><th>Bayar</th><th class="num">Total</th><th>Status</th><th></th></tr>
       ${DB.purchases.slice().reverse().map(v=>{
         const c = DB.vendors.find(x=>x.id===v.vendorId);
-        return `<tr><td>${v.no}</td><td>${v.tanggal}</td><td>${esc(c?c.nama:'Umum')}</td>
-        <td><span class="badge ${v.bayar==='kredit'?'warn':'ok'}">${v.bayar}</span></td>
-        <td class="num">${fmt(v.total)}</td>
-        <td style="text-align:right"><button class="sm danger" onclick="delPurchase('${v.id}')">×</button></td></tr>`;
+        const sisa = getSisaInvoice(v);
+        return `<tr>
+          <td>${v.no}</td><td>${v.tanggal}</td>
+          <td>${esc(c?c.nama:'Umum')}</td>
+          <td><span class="badge ${v.bayar==='kredit'?'warn':'ok'}">${v.bayar}</span></td>
+          <td class="num">${fmt(v.total)}</td>
+          <td>${getStatusLabel(v.status)}</td>
+          <td style="text-align:right">
+            ${sisa>0?`<button class="sm ok" onclick="openPelunasanPurchase('${v.id}')">Bayar</button>`:''}
+            <button class="sm danger" onclick="delPurchase('${v.id}')">×</button>
+          </td>
+        </tr>`;
       }).join('')}
       </table></div>`}
     </div>`;
   renderPurLines();
 }
+function togglePurDueDate(){
+  const b = document.getElementById('pur_bayar').value;
+  document.getElementById('pur_due_wrap').style.display = b==='kredit' ? 'block' : 'none';
+}
+window.togglePurDueDate = togglePurDueDate;
+
 function renderPurLines(){
   document.getElementById('pur_items').innerHTML = purLines.map((l,i)=>`
     <div class="jline">
@@ -1158,9 +1300,7 @@ function purChange(i, f, v){
 }
 function addPurLine(){ purLines.push({itemId:'', qty:1, harga:0}); renderPurLines() }
 function purDel(i){ purLines.splice(i,1); if(!purLines.length) purLines.push({itemId:'', qty:1, harga:0}); renderPurLines() }
-window.addPurLine = addPurLine;
-window.purDel = purDel;
-window.purChange = purChange;
+window.addPurLine = addPurLine; window.purDel = purDel; window.purChange = purChange;
 
 function savePurchase(){
   const valid = purLines.filter(l=>l.itemId && l.qty>0);
@@ -1176,10 +1316,14 @@ function savePurchase(){
   lines.push({kode:'1201', debit:total, kredit:0});
   lines.push({kode:kasKode, debit:0, kredit:total});
   const j = postJournal({tanggal, ref:no, ket:`Pembelian dari ${vend?vend.nama:'Umum'}`, lines, source:'purchase'});
-  DB.purchases.push({id:j.id, no, tanggal, vendorId, bayar, total, items:valid.map(l=>({...l}))});
-  save();
-  renderPembelian();
-  toast('Faktur disimpan & jurnal diposting');
+  DB.purchases.push({
+    id:j.id, no, tanggal, vendorId, bayar, total,
+    paidAmount: bayar==='kredit' ? 0 : total,
+    status: bayar==='kredit' ? 'belum' : 'lunas',
+    dueDate: bayar==='kredit' ? (pur_due.value || addDays(tanggal,30)) : null,
+    items: valid.map(l=>({...l}))
+  });
+  save(); renderPembelian(); toast('Faktur disimpan & jurnal diposting');
 }
 function delPurchase(id){
   if(!confirm('Hapus faktur & jurnalnya? Stok dikembalikan.')) return;
@@ -1187,17 +1331,117 @@ function delPurchase(id){
   v.items.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); if(it) it.stok -= l.qty });
   DB.journals = DB.journals.filter(j=>j.id!==id);
   DB.purchases = DB.purchases.filter(x=>x.id!==id);
+  DB.payments = DB.payments.filter(p=>p.refId !== id);
   save(); renderPembelian(); toast('Terhapus');
 }
-window.savePurchase = savePurchase;
-window.delPurchase = delPurchase;
+window.savePurchase = savePurchase; window.delPurchase = delPurchase;
+
+/* =========================================================
+   [BARU] PELUNASAN INVOICE (AR)
+========================================================= */
+function openPelunasanInvoice(invId){
+  const inv = DB.invoices.find(v=>v.id===invId);
+  if(!inv) return;
+  const sisa = getSisaInvoice(inv);
+  const cust = DB.customers.find(c=>c.id===inv.customerId);
+  openModal('Pelunasan Invoice ' + inv.no, `
+    <p style="margin-bottom:8px">Pelanggan: <b>${esc(cust?cust.nama:'Umum')}</b></p>
+    <div class="grid" style="margin-bottom:12px">
+      <div class="stat"><div class="label">Total</div><div class="val" style="font-size:16px">${fmt(inv.total)}</div></div>
+      <div class="stat"><div class="label">Sudah Bayar</div><div class="val" style="font-size:16px">${fmt(inv.paidAmount||0)}</div></div>
+      <div class="stat"><div class="label">Sisa</div><div class="val" style="font-size:16px;color:#dc2626">${fmt(sisa)}</div></div>
+    </div>
+    <label class="f"><span>Tanggal Pelunasan</span><input type="date" id="pel_tgl" value="${today()}"></label>
+    <label class="f"><span>Jumlah Bayar</span><input type="number" id="pel_jml" value="${sisa}"></label>
+    <label class="f"><span>Masuk ke</span><select id="pel_akun">
+      <option value="1001">Kas</option>
+      <option value="1002">Bank</option>
+    </select></label>
+    <label class="f"><span>Keterangan (opsional)</span><input id="pel_ket" placeholder="mis: Transfer BCA"></label>
+  `, `<button class="ghost" onclick="closeModal()">Batal</button><button onclick="savePelunasanInvoice('${invId}')">Simpan Pelunasan</button>`);
+}
+function savePelunasanInvoice(invId){
+  const inv = DB.invoices.find(v=>v.id===invId);
+  const jml = +pel_jml.value;
+  const sisa = getSisaInvoice(inv);
+  if(!jml || jml <= 0) return toast('Jumlah wajib','bad');
+  if(jml > sisa) return toast('Jumlah melebihi sisa piutang','bad');
+  const cust = DB.customers.find(c=>c.id===inv.customerId);
+  const lines = [
+    {kode:pel_akun.value, debit:jml, kredit:0},
+    {kode:'1101', debit:0, kredit:jml}
+  ];
+  const ref = 'PAY-' + Date.now().toString().slice(-5);
+  postJournal({
+    tanggal: pel_tgl.value,
+    ref,
+    ket: `Pelunasan ${inv.no} - ${cust?cust.nama:'Umum'}${pel_ket.value?' ('+pel_ket.value+')':''}`,
+    lines, source:'payment'
+  });
+  inv.paidAmount = (inv.paidAmount||0) + jml;
+  inv.status = inv.paidAmount >= inv.total ? 'lunas' : 'sebagian';
+  DB.payments.push({ id:uid(), tanggal:pel_tgl.value, tipe:'AR', refId:inv.id, refNo:inv.no, jumlah:jml, akunKas:pel_akun.value });
+  save(); closeModal(); renderLapPiutang(); toast('Pelunasan disimpan');
+}
+window.openPelunasanInvoice = openPelunasanInvoice;
+window.savePelunasanInvoice = savePelunasanInvoice;
+
+/* =========================================================
+   [BARU] PELUNASAN FAKTUR (AP)
+========================================================= */
+function openPelunasanPurchase(purId){
+  const pur = DB.purchases.find(v=>v.id===purId);
+  if(!pur) return;
+  const sisa = getSisaInvoice(pur);
+  const vend = DB.vendors.find(c=>c.id===pur.vendorId);
+  openModal('Pembayaran Faktur ' + pur.no, `
+    <p style="margin-bottom:8px">Vendor: <b>${esc(vend?vend.nama:'Umum')}</b></p>
+    <div class="grid" style="margin-bottom:12px">
+      <div class="stat"><div class="label">Total</div><div class="val" style="font-size:16px">${fmt(pur.total)}</div></div>
+      <div class="stat"><div class="label">Sudah Bayar</div><div class="val" style="font-size:16px">${fmt(pur.paidAmount||0)}</div></div>
+      <div class="stat"><div class="label">Sisa</div><div class="val" style="font-size:16px;color:#dc2626">${fmt(sisa)}</div></div>
+    </div>
+    <label class="f"><span>Tanggal Pembayaran</span><input type="date" id="pel_tgl" value="${today()}"></label>
+    <label class="f"><span>Jumlah Bayar</span><input type="number" id="pel_jml" value="${sisa}"></label>
+    <label class="f"><span>Keluar dari</span><select id="pel_akun">
+      <option value="1001">Kas</option>
+      <option value="1002">Bank</option>
+    </select></label>
+    <label class="f"><span>Keterangan (opsional)</span><input id="pel_ket" placeholder="mis: Transfer Mandiri"></label>
+  `, `<button class="ghost" onclick="closeModal()">Batal</button><button onclick="savePelunasanPurchase('${purId}')">Simpan Pembayaran</button>`);
+}
+function savePelunasanPurchase(purId){
+  const pur = DB.purchases.find(v=>v.id===purId);
+  const jml = +pel_jml.value;
+  const sisa = getSisaInvoice(pur);
+  if(!jml || jml <= 0) return toast('Jumlah wajib','bad');
+  if(jml > sisa) return toast('Jumlah melebihi sisa utang','bad');
+  const vend = DB.vendors.find(c=>c.id===pur.vendorId);
+  const lines = [
+    {kode:'2001', debit:jml, kredit:0},
+    {kode:pel_akun.value, debit:0, kredit:jml}
+  ];
+  const ref = 'BPY-' + Date.now().toString().slice(-5);
+  postJournal({
+    tanggal: pel_tgl.value,
+    ref,
+    ket: `Bayar ${pur.no} - ${vend?vend.nama:'Umum'}${pel_ket.value?' ('+pel_ket.value+')':''}`,
+    lines, source:'payment'
+  });
+  pur.paidAmount = (pur.paidAmount||0) + jml;
+  pur.status = pur.paidAmount >= pur.total ? 'lunas' : 'sebagian';
+  DB.payments.push({ id:uid(), tanggal:pel_tgl.value, tipe:'AP', refId:pur.id, refNo:pur.no, jumlah:jml, akunKas:pel_akun.value });
+  save(); closeModal(); renderLapUtang(); toast('Pembayaran disimpan');
+}
+window.openPelunasanPurchase = openPelunasanPurchase;
+window.savePelunasanPurchase = savePelunasanPurchase;
 
 /* =========================================================
    PENERIMAAN KAS
 ========================================================= */
 function renderPenerimaan(){
   document.getElementById('penerimaan').innerHTML = `
-    <h2>Penerimaan Kas / Bank</h2><p class="sub">Catat uang masuk selain invoice penjualan.</p>
+    <h2>Penerimaan Kas / Bank</h2><p class="sub">Catat uang masuk manual (bukan pelunasan invoice).</p>
     <div class="card">
       <div class="split">
         <label class="f"><span>Tanggal</span><input type="date" id="rc_tgl" value="${today()}"></label>
@@ -1210,8 +1454,9 @@ function renderPenerimaan(){
           .map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select></label>
       <label class="f"><span>Jumlah</span><input type="number" id="rc_jml" value="0"></label>
-      <label class="f"><span>Keterangan</span><input id="rc_ket" placeholder="mis: Pelunasan piutang PT ABC"></label>
+      <label class="f"><span>Keterangan</span><input id="rc_ket" placeholder="mis: Setoran modal"></label>
       <button onclick="saveTerima()">Simpan Penerimaan</button>
+      <p style="font-size:12px;color:#64748b;margin-top:10px">💡 Untuk pelunasan invoice pelanggan, buka <b>Laporan Piutang</b> → klik tombol "Lunasi".</p>
     </div>`;
 }
 function saveTerima(){
@@ -1230,7 +1475,7 @@ window.saveTerima = saveTerima;
 ========================================================= */
 function renderPengeluaran(){
   document.getElementById('pengeluaran').innerHTML = `
-    <h2>Pengeluaran Kas / Bank</h2><p class="sub">Catat uang keluar untuk beban, utang, dll.</p>
+    <h2>Pengeluaran Kas / Bank</h2><p class="sub">Catat uang keluar manual (bukan pembayaran faktur).</p>
     <div class="card">
       <div class="split">
         <label class="f"><span>Tanggal</span><input type="date" id="pc_tgl" value="${today()}"></label>
@@ -1243,8 +1488,9 @@ function renderPengeluaran(){
           .map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select></label>
       <label class="f"><span>Jumlah</span><input type="number" id="pc_jml" value="0"></label>
-      <label class="f"><span>Keterangan</span><input id="pc_ket" placeholder="mis: Bayar listrik bulan ini"></label>
+      <label class="f"><span>Keterangan</span><input id="pc_ket" placeholder="mis: Bayar listrik"></label>
       <button onclick="saveKeluar()">Simpan Pengeluaran</button>
+      <p style="font-size:12px;color:#64748b;margin-top:10px">💡 Untuk bayar faktur vendor, buka <b>Laporan Utang</b> → klik tombol "Bayar".</p>
     </div>`;
 }
 function saveKeluar(){
@@ -1305,9 +1551,7 @@ function jvChange(i, f, v){
 }
 function addJvLine(){ jvLines.push({kode:'', debit:0, kredit:0}); renderJvLines() }
 function jvDel(i){ jvLines.splice(i,1); if(jvLines.length<2) jvLines.push({kode:'', debit:0, kredit:0}); renderJvLines() }
-window.addJvLine = addJvLine;
-window.jvDel = jvDel;
-window.jvChange = jvChange;
+window.addJvLine = addJvLine; window.jvDel = jvDel; window.jvChange = jvChange;
 function saveJv(){
   const lines = jvLines.filter(l=>l.kode && ((+l.debit||0)||(+l.kredit||0)));
   const d = lines.reduce((s,l)=>s+(+l.debit||0),0);
@@ -1419,7 +1663,210 @@ function saveOpname(){
 window.saveOpname = saveOpname;
 
 /* =========================================================
-   LAPORAN
+   [BARU] LAPORAN PIUTANG PER PELANGGAN
+========================================================= */
+function renderLapPiutang(){
+  const t = today();
+  const rows = DB.customers.map(c=>{
+    const invs = DB.invoices.filter(v=>v.customerId === c.id && v.bayar === 'kredit');
+    const total = invs.reduce((s,v)=>s+v.total, 0);
+    const sisa = invs.reduce((s,v)=>s+getSisaInvoice(v), 0);
+    const lunas = invs.filter(v=>v.status==='lunas').length;
+    const belum = invs.filter(v=>v.status!=='lunas').length;
+    const lewat = invs.filter(v=>getSisaInvoice(v)>0 && v.dueDate && v.dueDate < t).reduce((s,v)=>s+getSisaInvoice(v),0);
+    return {c, invs, total, sisa, lunas, belum, lewat};
+  }).filter(r=>r.invs.length > 0);
+
+  const totSisa = rows.reduce((s,r)=>s+r.sisa, 0);
+  const totLewat = rows.reduce((s,r)=>s+r.lewat, 0);
+
+  document.getElementById('lappiutang').innerHTML = `
+    <h2>Laporan Piutang per Pelanggan</h2>
+    <p class="sub">Daftar piutang outstanding dari transaksi kredit.</p>
+    <div class="grid" style="margin-bottom:14px">
+      <div class="stat"><div class="label">Total Piutang</div><div class="val">${fmt(totSisa)}</div></div>
+      <div class="stat"><div class="label">Lewat Jatuh Tempo</div><div class="val" style="color:#dc2626">${fmt(totLewat)}</div></div>
+      <div class="stat"><div class="label">Jumlah Pelanggan</div><div class="val">${rows.length}</div></div>
+    </div>
+    <div class="card" style="padding:0">
+    ${rows.length===0 ? '<div class="empty">Belum ada piutang</div>' : `
+    <div class="tbl-wrap" style="border:0"><table>
+      <tr><th>Pelanggan</th><th class="num">Invoice</th><th class="num">Belum Lunas</th><th class="num">Total Piutang</th><th class="num">Lewat Tempo</th><th></th></tr>
+      ${rows.map(r=>`<tr>
+        <td><a style="color:var(--brand);cursor:pointer;font-weight:600" onclick="showDetailCustomer('${r.c.id}')">${esc(r.c.nama)}</a></td>
+        <td class="num">${r.invs.length}</td>
+        <td class="num">${r.belum}</td>
+        <td class="num"><b>${fmt(r.sisa)}</b></td>
+        <td class="num" style="color:${r.lewat>0?'#dc2626':'#64748b'}">${r.lewat>0?fmt(r.lewat):'-'}</td>
+        <td style="text-align:right"><button class="sm ghost" onclick="showDetailCustomer('${r.c.id}')">Detail</button></td>
+      </tr>`).join('')}
+      <tr class="tot">
+        <td colspan="3">Total</td>
+        <td class="num">${fmt(totSisa)}</td>
+        <td class="num" style="color:#dc2626">${fmt(totLewat)}</td>
+        <td></td>
+      </tr>
+    </table></div>`}
+    </div>
+    <div class="card">
+      <h3 class="sec" style="margin-top:0">Semua Invoice Belum Lunas</h3>
+      ${(()=>{
+        const pending = DB.invoices.filter(v=>v.bayar==='kredit' && getSisaInvoice(v)>0).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+        if(!pending.length) return '<div class="empty">Semua invoice sudah lunas 🎉</div>';
+        return `<div class="tbl-wrap"><table>
+          <tr><th>No</th><th>Tanggal</th><th>Pelanggan</th><th>Jatuh Tempo</th><th class="num">Total</th><th class="num">Sisa</th><th></th></tr>
+          ${pending.map(v=>{
+            const c = DB.customers.find(x=>x.id===v.customerId);
+            const lewat = v.dueDate && v.dueDate < today();
+            return `<tr>
+              <td>${v.no}</td><td>${v.tanggal}</td>
+              <td>${esc(c?c.nama:'Umum')}</td>
+              <td>${v.dueDate||'-'} ${lewat?'<span class="badge bad">Lewat</span>':''}</td>
+              <td class="num">${fmt(v.total)}</td>
+              <td class="num"><b style="color:#dc2626">${fmt(getSisaInvoice(v))}</b></td>
+              <td style="text-align:right"><button class="sm ok" onclick="openPelunasanInvoice('${v.id}')">Lunasi</button></td>
+            </tr>`;
+          }).join('')}
+        </table></div>`;
+      })()}
+    </div>
+  `;
+}
+
+/* =========================================================
+   [BARU] LAPORAN UTANG PER VENDOR
+========================================================= */
+function renderLapUtang(){
+  const t = today();
+  const rows = DB.vendors.map(c=>{
+    const purs = DB.purchases.filter(v=>v.vendorId === c.id && v.bayar === 'kredit');
+    const sisa = purs.reduce((s,v)=>s+getSisaInvoice(v), 0);
+    const belum = purs.filter(v=>v.status!=='lunas').length;
+    const lewat = purs.filter(v=>getSisaInvoice(v)>0 && v.dueDate && v.dueDate < t).reduce((s,v)=>s+getSisaInvoice(v),0);
+    return {c, purs, sisa, belum, lewat};
+  }).filter(r=>r.purs.length > 0);
+
+  const totSisa = rows.reduce((s,r)=>s+r.sisa, 0);
+  const totLewat = rows.reduce((s,r)=>s+r.lewat, 0);
+
+  document.getElementById('laputang').innerHTML = `
+    <h2>Laporan Utang per Vendor</h2>
+    <p class="sub">Daftar utang outstanding dari pembelian kredit.</p>
+    <div class="grid" style="margin-bottom:14px">
+      <div class="stat"><div class="label">Total Utang</div><div class="val">${fmt(totSisa)}</div></div>
+      <div class="stat"><div class="label">Lewat Jatuh Tempo</div><div class="val" style="color:#dc2626">${fmt(totLewat)}</div></div>
+      <div class="stat"><div class="label">Jumlah Vendor</div><div class="val">${rows.length}</div></div>
+    </div>
+    <div class="card" style="padding:0">
+    ${rows.length===0 ? '<div class="empty">Belum ada utang</div>' : `
+    <div class="tbl-wrap" style="border:0"><table>
+      <tr><th>Vendor</th><th class="num">Faktur</th><th class="num">Belum Lunas</th><th class="num">Total Utang</th><th class="num">Lewat Tempo</th><th></th></tr>
+      ${rows.map(r=>`<tr>
+        <td><a style="color:var(--brand);cursor:pointer;font-weight:600" onclick="showDetailVendor('${r.c.id}')">${esc(r.c.nama)}</a></td>
+        <td class="num">${r.purs.length}</td>
+        <td class="num">${r.belum}</td>
+        <td class="num"><b>${fmt(r.sisa)}</b></td>
+        <td class="num" style="color:${r.lewat>0?'#dc2626':'#64748b'}">${r.lewat>0?fmt(r.lewat):'-'}</td>
+        <td style="text-align:right"><button class="sm ghost" onclick="showDetailVendor('${r.c.id}')">Detail</button></td>
+      </tr>`).join('')}
+      <tr class="tot">
+        <td colspan="3">Total</td>
+        <td class="num">${fmt(totSisa)}</td>
+        <td class="num" style="color:#dc2626">${fmt(totLewat)}</td>
+        <td></td>
+      </tr>
+    </table></div>`}
+    </div>
+    <div class="card">
+      <h3 class="sec" style="margin-top:0">Semua Faktur Belum Dibayar</h3>
+      ${(()=>{
+        const pending = DB.purchases.filter(v=>v.bayar==='kredit' && getSisaInvoice(v)>0).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+        if(!pending.length) return '<div class="empty">Semua utang sudah lunas 🎉</div>';
+        return `<div class="tbl-wrap"><table>
+          <tr><th>No</th><th>Tanggal</th><th>Vendor</th><th>Jatuh Tempo</th><th class="num">Total</th><th class="num">Sisa</th><th></th></tr>
+          ${pending.map(v=>{
+            const c = DB.vendors.find(x=>x.id===v.vendorId);
+            const lewat = v.dueDate && v.dueDate < today();
+            return `<tr>
+              <td>${v.no}</td><td>${v.tanggal}</td>
+              <td>${esc(c?c.nama:'Umum')}</td>
+              <td>${v.dueDate||'-'} ${lewat?'<span class="badge bad">Lewat</span>':''}</td>
+              <td class="num">${fmt(v.total)}</td>
+              <td class="num"><b style="color:#dc2626">${fmt(getSisaInvoice(v))}</b></td>
+              <td style="text-align:right"><button class="sm ok" onclick="openPelunasanPurchase('${v.id}')">Bayar</button></td>
+            </tr>`;
+          }).join('')}
+        </table></div>`;
+      })()}
+    </div>
+  `;
+}
+
+/* =========================================================
+   [BARU] AGING PIUTANG
+========================================================= */
+function renderLapAging(){
+  const t = today();
+  const buckets = { current:0, d30:0, d60:0, d90:0, over:0 };
+  const detail = [];
+
+  DB.invoices.forEach(v=>{
+    if(v.bayar !== 'kredit') return;
+    const sisa = getSisaInvoice(v);
+    if(sisa <= 0) return;
+    const due = v.dueDate || v.tanggal;
+    const umur = daysBetween(due, t);
+    let bucket = 'current';
+    if(umur <= 0) bucket = 'current';
+    else if(umur <= 30) bucket = 'd30';
+    else if(umur <= 60) bucket = 'd60';
+    else if(umur <= 90) bucket = 'd90';
+    else bucket = 'over';
+    buckets[bucket] += sisa;
+    detail.push({ v, sisa, umur, bucket });
+  });
+
+  const total = Object.values(buckets).reduce((s,v)=>s+v,0);
+
+  document.getElementById('lapaging').innerHTML = `
+    <h2>Aging Piutang</h2>
+    <p class="sub">Analisis umur piutang berdasarkan jatuh tempo per ${t}</p>
+    <div class="grid">
+      <div class="stat"><div class="label">Belum Jatuh Tempo</div><div class="val" style="color:#16a34a">${fmt(buckets.current)}</div></div>
+      <div class="stat"><div class="label">1–30 Hari</div><div class="val" style="color:#f59e0b">${fmt(buckets.d30)}</div></div>
+      <div class="stat"><div class="label">31–60 Hari</div><div class="val" style="color:#f97316">${fmt(buckets.d60)}</div></div>
+      <div class="stat"><div class="label">61–90 Hari</div><div class="val" style="color:#dc2626">${fmt(buckets.d90)}</div></div>
+      <div class="stat"><div class="label">>90 Hari</div><div class="val" style="color:#7f1d1d">${fmt(buckets.over)}</div></div>
+      <div class="stat"><div class="label">Total Piutang</div><div class="val">${fmt(total)}</div></div>
+    </div>
+    <div class="card" style="margin-top:14px;padding:0">
+      <div style="padding:12px 14px;background:var(--soft);font-weight:600">Detail Piutang per Invoice</div>
+      ${detail.length===0 ? '<div class="empty">Belum ada piutang</div>' : `
+      <div class="tbl-wrap" style="border:0"><table>
+        <tr><th>Invoice</th><th>Pelanggan</th><th>Jatuh Tempo</th><th class="num">Umur (hari)</th><th class="num">Sisa</th><th>Kategori</th><th></th></tr>
+        ${detail.sort((a,b)=>b.umur-a.umur).map(r=>{
+          const c = DB.customers.find(x=>x.id===r.v.customerId);
+          const kat = r.bucket === 'current' ? '<span class="badge ok">Belum Tempo</span>' :
+                      r.bucket === 'd30' ? '<span class="badge warn">1–30 hari</span>' :
+                      r.bucket === 'd60' ? '<span class="badge warn">31–60 hari</span>' :
+                      r.bucket === 'd90' ? '<span class="badge bad">61–90 hari</span>' :
+                      '<span class="badge bad">&gt;90 hari</span>';
+          return `<tr>
+            <td>${r.v.no}</td>
+            <td>${esc(c?c.nama:'Umum')}</td>
+            <td>${r.v.dueDate||'-'}</td>
+            <td class="num">${r.umur > 0 ? r.umur : 0}</td>
+            <td class="num"><b>${fmt(r.sisa)}</b></td>
+            <td>${kat}</td>
+            <td style="text-align:right"><button class="sm ok" onclick="openPelunasanInvoice('${r.v.id}')">Lunasi</button></td>
+          </tr>`;
+        }).join('')}
+      </table></div>`}
+    </div>`;
+}
+
+/* =========================================================
+   LAPORAN — JURNAL, BUKU BESAR, SALDO, LR, NERACA, ARUS KAS
 ========================================================= */
 function filterJournals(){
   const from = window._lapFrom || '', to = window._lapTo || '';
@@ -1441,8 +1888,7 @@ function applyLapFilter(page){
   pages[page]();
 }
 function clearLapFilter(page){ window._lapFrom = ''; window._lapTo = ''; pages[page]() }
-window.applyLapFilter = applyLapFilter;
-window.clearLapFilter = clearLapFilter;
+window.applyLapFilter = applyLapFilter; window.clearLapFilter = clearLapFilter;
 
 function renderLapJurnal(){
   const js = filterJournals();
@@ -1669,11 +2115,12 @@ const phases = [
     "Buat 10 invoice penjualan (campur tunai & kredit)",
     "Buat 5 faktur pembelian",
     "Catat 3 penerimaan kas & 3 pengeluaran kas",
-    "Buat 2 jurnal umum manual"]},
+    "Lakukan 3 pelunasan invoice & 2 pembayaran utang"]},
   {id:4, title:"Fase 4 — Persediaan & Laporan", dur:"± 1 minggu", tasks:[
     "Cek Kartu Stok salah satu barang",
     "Lakukan Stock Opname untuk 3 item",
     "Buka Laba Rugi, Neraca, Arus Kas",
+    "Buka Laporan Piutang, Utang, dan Aging",
     "Pastikan Neraca Balance"]},
   {id:5, title:"Fase 5 — Analisis & Portofolio", dur:"1 minggu+", tasks:[
     "Screenshot semua laporan sebagai portofolio",
@@ -1711,12 +2158,12 @@ const quiz = [
   {q:"Akun yang bertambah di sisi DEBIT adalah?", o:["Kas","Utang Usaha","Modal","Pendapatan"], a:0},
   {q:"Laporan yang menunjukkan Aset = Liabilitas + Ekuitas?", o:["Neraca","Laba Rugi","Arus Kas"], a:0},
   {q:"Pada penjualan kredit, akun yang didebit adalah?", o:["Piutang Usaha","Kas","Pendapatan","Persediaan"], a:0},
-  {q:"HPP (Harga Pokok Penjualan) muncul saat?", o:["Penjualan barang dagang","Penjualan jasa","Pembelian aset","Bayar utang"], a:0},
-  {q:"Rekonsiliasi bank artinya?", o:["Cocokkan catatan kas dengan mutasi rekening","Hitung bunga bank","Buat rekening baru"], a:0},
-  {q:"Stock opname adalah?", o:["Menghitung fisik persediaan & bandingkan dengan sistem","Menambah stok","Menghapus stok"], a:0},
-  {q:"Selisih persediaan (fisik > sistem) dijurnal dengan?", o:["Debit Persediaan, Kredit Selisih Persediaan","Debit Kas, Kredit Persediaan","Debit Beban, Kredit Utang"], a:0},
-  {q:"Sertifikasi dasar Accurate bernama?", o:["CADE","CAP","CAE"], a:0},
-  {q:"Manfaat utama ERP?", o:["Menyatukan data antar divisi dalam satu database","Memperbanyak kertas kerja","Memisahkan data tiap divisi"], a:0}
+  {q:"Saat pelunasan piutang, jurnalnya adalah?", o:["Kas (D) / Piutang Usaha (K)","Piutang Usaha (D) / Kas (K)","Kas (D) / Pendapatan (K)","Beban (D) / Kas (K)"], a:0},
+  {q:"Aging piutang berguna untuk?", o:["Analisis umur piutang lewat jatuh tempo","Menghitung pajak","Cek stok gudang","Hitung penyusutan"], a:0},
+  {q:"Stock opname adalah?", o:["Menghitung fisik persediaan & bandingkan dengan sistem","Menambah stok","Menghapus stok","Menghitung piutang"], a:0},
+  {q:"Selisih persediaan (fisik > sistem) dijurnal dengan?", o:["Debit Persediaan, Kredit Selisih Persediaan","Debit Kas, Kredit Persediaan","Debit Beban, Kredit Utang","Debit Modal, Kredit Persediaan"], a:0},
+  {q:"Sertifikasi dasar Accurate bernama?", o:["CADE","CAP","CAE","CPS"], a:0},
+  {q:"Manfaat utama ERP?", o:["Menyatukan data antar divisi dalam satu database","Memperbanyak kertas kerja","Memisahkan data tiap divisi","Menambah biaya"], a:0}
 ];
 let quizState = {};
 function renderKuis(){
@@ -1746,10 +2193,9 @@ function checkKuis(){
   });
   const fb = document.getElementById('kuis_fb');
   fb.className = 'fb ' + (score>=7 ? 'ok' : 'bad');
-  fb.textContent = `Skor kamu: ${score}/10 ${score>=7 ? '🎉' : 'Ayo ulangi'}`;
+  fb.textContent = `Skor kamu: ${score}/10 ${score>=7 ? '🎉' : '💪 Ayo ulangi'}`;
 }
-window.checkKuis = checkKuis;
-window.renderKuis = renderKuis;
+window.checkKuis = checkKuis; window.renderKuis = renderKuis;
 
 /* =========================================================
    INIT
