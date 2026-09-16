@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>ERP Practice — Accurate-like</title>
+<title>ERP Practice — Accurate-like + Supabase</title>
 <style>
 :root{--bg:#0f172a;--bg2:#1e293b;--brand:#2563eb;--brand2:#1d4ed8;--line:#e2e8f0;--muted:#64748b;--soft:#f1f5f9;--ok:#16a34a;--bad:#dc2626;--warn:#f59e0b}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:#0f172a;line-height:1.5;font-size:14px}
 .app{display:flex;min-height:100vh}
-aside{width:250px;background:var(--bg);color:#e2e8f0;padding:18px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+aside{width:260px;background:var(--bg);color:#e2e8f0;padding:18px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
 aside h1{font-size:15px;color:#fff;margin-bottom:2px;padding:0 8px}
-aside .sub{font-size:11px;color:#94a3b8;margin-bottom:16px;padding:0 8px}
+aside .sub{font-size:11px;color:#94a3b8;margin-bottom:12px;padding:0 8px}
 .navgrp{font-size:10px;text-transform:uppercase;color:#64748b;padding:10px 8px 4px;letter-spacing:.6px}
 .nav a{display:block;padding:7px 10px;border-radius:7px;color:#cbd5e1;text-decoration:none;font-size:13px;margin-bottom:2px;cursor:pointer}
 .nav a:hover{background:#334155;color:#fff}
@@ -79,22 +79,45 @@ tr:hover td{background:#fafbfc}
 .opt.correct{background:#dcfce7;border-color:#86efac}
 .opt.wrong{background:#fee2e2;border-color:#fca5a5}
 .jline{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
-.tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:2px solid var(--line);flex-wrap:wrap}
-.tabs button{background:transparent;color:var(--muted);border-radius:0;padding:8px 14px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-2px}
-.tabs button:hover{background:var(--soft);color:#0f172a}
-.tabs button.on{color:var(--brand);border-bottom-color:var(--brand);background:transparent}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tot{background:var(--soft);font-weight:700}
 .tot td{background:var(--soft)}
 h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
-@media(max-width:820px){.app{flex-direction:column}aside{width:100%;height:auto;position:static;padding:12px}.navgrp{display:none}.nav{display:flex;flex-wrap:wrap;gap:4px}.nav a{margin:0;padding:6px 10px;font-size:12px}main{padding:14px}.split{grid-template-columns:1fr}.jline{grid-template-columns:1fr}}
+/* AUTH BOX */
+.authBox{margin:0 4px 14px;padding:10px;background:#1e293b;border-radius:8px;font-size:12px}
+.authBox .status{color:#94a3b8;margin-bottom:8px;font-size:11px}
+.authBox input{margin-bottom:6px;padding:6px 8px;font-size:12px;background:#0f172a;border:1px solid #334155;color:#e2e8f0}
+.authBox input::placeholder{color:#64748b}
+.authBox button.sm{width:100%;margin-bottom:4px}
+.authBox .user{color:#e2e8f0;font-size:11px;word-break:break-all;margin-bottom:6px}
+.authBox .sync{color:#64748b;font-size:10px;margin-top:6px;min-height:14px}
+.authBox .sync.ok{color:#4ade80}
+.authBox .sync.bad{color:#f87171}
+.authBox .sync.warn{color:#fbbf24}
+@media(max-width:820px){.app{flex-direction:column}aside{width:100%;height:auto;position:static;padding:12px}.navgrp{display:none}.nav{display:flex;flex-wrap:wrap;gap:4px}.nav a{margin:0;padding:6px 10px;font-size:12px}main{padding:14px}.split{grid-template-columns:1fr}.jline{grid-template-columns:1fr}.authBox{margin-bottom:8px}}
 </style>
 </head>
 <body>
 <div class="app">
 <aside>
   <h1>🏢 ERP Practice</h1>
-  <div class="sub">Accurate-like · Offline · Gratis</div>
+  <div class="sub">Accurate-like · Supabase Sync</div>
+
+  <div class="authBox" id="authBox">
+    <div class="status" id="authStatus">Memeriksa Supabase…</div>
+    <div id="authForm" style="display:none">
+      <input id="authEmail" type="email" placeholder="email">
+      <input id="authPass" type="password" placeholder="password (min 6)">
+      <button class="sm" onclick="doLogin()">Login</button>
+      <button class="sm ghost" onclick="doSignup()">Daftar</button>
+    </div>
+    <div id="authUser" style="display:none">
+      <div class="user" id="authEmailShow"></div>
+      <button class="sm ghost" onclick="doLogout()">Logout</button>
+    </div>
+    <div class="sync" id="syncStatus"></div>
+  </div>
+
   <nav class="nav">
     <div class="navgrp">Utama</div>
     <a data-target="dashboard" class="active">📊 Dashboard</a>
@@ -151,21 +174,36 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
 </div>
 <div id="modal"><div class="modal-box"><div class="head"><h3 id="mTitle">—</h3><button class="x" onclick="closeModal()">×</button></div><div class="body" id="mBody"></div><div class="foot" id="mFoot"></div></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* =========================================================
+   SUPABASE CONFIG
+   ---------------------------------------------------------
+   Isi dua nilai di bawah dengan milikmu dari:
+   Supabase Dashboard → Project Settings → API
+   Jika dibiarkan kosong, aplikasi jalan mode lokal (localStorage).
+========================================================= */
+const SUPABASE_URL = 'https://acmmenknbtjfyhanjzpy.supabase.co';   // contoh: 'https://abcdefgh.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbW1lbmtuYnRqZnloYW5qenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1Mzc4MTEsImV4cCI6MjEwNTExMzgxMX0.fYLp9QX8W3h8uiaVtf125kYhgaip21hGYtUa2n-Aj18';   // anon public key (string panjang eyJ...)
+
 /* =========================================================
    UTIL
 ========================================================= */
-const LS='erpPractice_v1';
-const uid=()=>Math.random().toString(36).slice(2,10);
-const fmt=n=>'Rp '+(Number(n)||0).toLocaleString('id-ID');
-const today=()=>new Date().toISOString().slice(0,10);
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const toast=(msg,type='ok')=>{const d=document.createElement('div');d.textContent=msg;d.style.cssText=`position:fixed;bottom:20px;right:20px;background:${type==='ok'?'#16a34a':'#dc2626'};color:#fff;padding:10px 16px;border-radius:8px;z-index:999;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2)`;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)};
+const LS = 'erpPractice_v1';
+const uid = () => Math.random().toString(36).slice(2,10);
+const fmt = n => 'Rp ' + (Number(n)||0).toLocaleString('id-ID');
+const today = () => new Date().toISOString().slice(0,10);
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(msg,type='ok'){
+  const d=document.createElement('div');d.textContent=msg;
+  d.style.cssText=`position:fixed;bottom:20px;right:20px;background:${type==='ok'?'#16a34a':'#dc2626'};color:#fff;padding:10px 16px;border-radius:8px;z-index:999;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2)`;
+  document.body.appendChild(d);setTimeout(()=>d.remove(),2200);
+}
 
 /* =========================================================
    COA DEFAULT
 ========================================================= */
-const COA_DEFAULT=[
+const COA_DEFAULT = [
   {kode:'1001',nama:'Kas',tipe:'Aset'},
   {kode:'1002',nama:'Bank',tipe:'Aset'},
   {kode:'1101',nama:'Piutang Usaha',tipe:'Aset'},
@@ -191,10 +229,11 @@ const COA_DEFAULT=[
    STATE
 ========================================================= */
 let DB;
-function loadDB(){
-  try{DB=JSON.parse(localStorage.getItem(LS))||null}catch(e){DB=null}
-  if(!DB||!DB.coa){DB=freshDB()}
-}
+let sb = null;
+let currentUser = null;
+let pushTimer = null;
+let isPulling = false;
+
 function freshDB(){
   return {
     company:{nama:'Klinik & Toko Alat Kesehatan Sragen Jaya',alamat:'Jl. Raya Sragen No. 1',telp:'0271-123456',npwp:'01.234.567.8-901.000'},
@@ -204,42 +243,176 @@ function freshDB(){
     counters:{inv:0,pur:0,jv:0}
   };
 }
-function save(){localStorage.setItem(LS,JSON.stringify(DB))}
+
+function loadDB(){
+  try{DB = JSON.parse(localStorage.getItem(LS)) || null}catch(e){DB=null}
+  if(!DB || !DB.coa) DB = freshDB();
+}
+
+function save(){
+  localStorage.setItem(LS, JSON.stringify(DB));
+  if(currentUser && !isPulling) schedulePush();
+}
+
+/* =========================================================
+   SUPABASE SYNC
+========================================================= */
+function isSupabaseConfigured(){
+  return SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes('xxxx');
+}
+
+async function initSupabase(){
+  const status = document.getElementById('authStatus');
+  const form = document.getElementById('authForm');
+
+  if(!window.supabase || !isSupabaseConfigured()){
+    status.textContent = '🔌 Mode lokal (Supabase belum dikonfigurasi)';
+    status.style.color = '#fbbf24';
+    return;
+  }
+
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data:{session} } = await sb.auth.getSession();
+  currentUser = session ? session.user : null;
+  renderAuthUI();
+
+  sb.auth.onAuthStateChange(async (_, sess) => {
+    currentUser = sess ? sess.user : null;
+    renderAuthUI();
+    if(currentUser) await pullFromCloud();
+  });
+}
+
+function renderAuthUI(){
+  const status = document.getElementById('authStatus');
+  const form = document.getElementById('authForm');
+  const userBox = document.getElementById('authUser');
+  if(currentUser){
+    status.style.display = 'none';
+    form.style.display = 'none';
+    userBox.style.display = 'block';
+    document.getElementById('authEmailShow').textContent = '👤 ' + currentUser.email;
+  }else{
+    status.style.display = 'block';
+    form.style.display = 'block';
+    userBox.style.display = 'none';
+    status.textContent = 'Login untuk sinkron ke cloud';
+    status.style.color = '#94a3b8';
+  }
+}
+
+function setSync(msg, kind){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  el.textContent = msg;
+  el.className = 'sync' + (kind ? ' ' + kind : '');
+}
+
+function schedulePush(){
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushToCloud, 1200);
+}
+
+async function pushToCloud(){
+  if(!sb || !currentUser) return;
+  setSync('⏳ Menyimpan…', 'warn');
+  const { error } = await sb.from('erp_data').upsert({
+    user_id: currentUser.id,
+    data: DB,
+    updated_at: new Date().toISOString()
+  });
+  if(error){
+    setSync('⚠️ Gagal: ' + error.message, 'bad');
+    console.error(error);
+  }else{
+    setSync('✅ Tersinkron ' + new Date().toLocaleTimeString('id-ID'), 'ok');
+  }
+}
+
+async function pullFromCloud(){
+  if(!sb || !currentUser) return;
+  isPulling = true;
+  setSync('⏳ Memuat dari cloud…', 'warn');
+  const { data, error } = await sb.from('erp_data').select('data').eq('user_id', currentUser.id).maybeSingle();
+  isPulling = false;
+  if(error){
+    setSync('⚠️ ' + error.message, 'bad');
+    return;
+  }
+  if(data && data.data && data.data.coa){
+    DB = data.data;
+    localStorage.setItem(LS, JSON.stringify(DB));
+    setSync('✅ Dimuat dari cloud', 'ok');
+    // refresh halaman yang sedang aktif
+    const active = document.querySelector('.nav a.active');
+    if(active && pages[active.dataset.target]) pages[active.dataset.target]();
+  }else{
+    // belum ada di cloud — push kondisi lokal saat ini
+    await pushToCloud();
+  }
+}
+
+/* =========================================================
+   AUTH ACTIONS
+========================================================= */
+async function doSignup(){
+  if(!sb) return toast('Supabase belum dikonfigurasi','bad');
+  const email = authEmail.value.trim();
+  const pass = authPass.value;
+  if(!email || pass.length < 6) return toast('Email valid & password min 6 karakter','bad');
+  const { error } = await sb.auth.signUp({ email, password: pass });
+  if(error) return toast(error.message,'bad');
+  toast('Pendaftaran berhasil. Cek email (jika konfirmasi aktif).');
+}
+async function doLogin(){
+  if(!sb) return toast('Supabase belum dikonfigurasi','bad');
+  const email = authEmail.value.trim();
+  const pass = authPass.value;
+  if(!email || !pass) return toast('Isi email & password','bad');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if(error) return toast(error.message,'bad');
+  toast('Login berhasil');
+}
+async function doLogout(){
+  if(!sb) return;
+  await sb.auth.signOut();
+  currentUser = null;
+  renderAuthUI();
+  setSync('');
+  toast('Logout');
+}
+window.doLogin = doLogin;
+window.doSignup = doSignup;
+window.doLogout = doLogout;
 
 /* =========================================================
    AKUNTANSI HELPERS
 ========================================================= */
-function acc(kode){return DB.coa.find(a=>a.kode===kode)}
-function normalBalance(kode){const a=acc(kode);return (!a||a.tipe==='Aset'||a.tipe==='Beban')?'D':'K'}
-function saldo(kode,from,to){
-  let d=0,k=0;
+function acc(kode){ return DB.coa.find(a=>a.kode===kode) }
+function normalBalance(kode){
+  const a = acc(kode);
+  return (!a || a.tipe==='Aset' || a.tipe==='Beban') ? 'D' : 'K';
+}
+function saldo(kode, from, to){
+  let d=0, k=0;
   DB.journals.forEach(j=>{
-    if(from&&j.tanggal<from)return; if(to&&j.tanggal>to)return;
-    j.lines.forEach(l=>{if(l.kode===kode){d+=+l.debit||0;k+=+l.kredit||0}});
+    if(from && j.tanggal < from) return;
+    if(to && j.tanggal > to) return;
+    j.lines.forEach(l=>{ if(l.kode===kode){ d += +l.debit||0; k += +l.kredit||0 } });
   });
-  return normalBalance(kode)==='D'?d-k:k-d;
+  return normalBalance(kode)==='D' ? d-k : k-d;
 }
-function saldoRaw(kode,from,to){
-  let d=0,k=0;
-  DB.journals.forEach(j=>{
-    if(from&&j.tanggal<from)return; if(to&&j.tanggal>to)return;
-    j.lines.forEach(l=>{if(l.kode===kode){d+=+l.debit||0;k+=+l.kredit||0}});
-  });
-  return {d,k};
-}
-function postJournal({tanggal,ref,ket,lines,source}){
-  const j={id:uid(),tanggal,ref,ket,lines:lines.filter(l=>l.kode),source:source||'manual'};
-  DB.journals.push(j);save();return j;
-}
-function deleteJournalBySource(src,id){
-  DB.journals=DB.journals.filter(j=>!(j.source===src&&j.refId===id));
+function postJournal({tanggal, ref, ket, lines, source}){
+  const j = { id:uid(), tanggal, ref, ket, lines: lines.filter(l=>l.kode), source: source||'manual' };
+  DB.journals.push(j);
   save();
+  return j;
 }
 
 /* =========================================================
    NAV
 ========================================================= */
-const pages={
+const pages = {
   dashboard:renderDashboard, perusahaan:renderPerusahaan, coa:renderCOA,
   customer:renderCustomer, vendor:renderVendor, barang:renderBarang,
   penjualan:renderPenjualan, pembelian:renderPembelian,
@@ -250,41 +423,42 @@ const pages={
   roadmap:renderRoadmap, kuis:renderKuis
 };
 document.querySelectorAll('.nav a').forEach(a=>{
-  a.onclick=()=>{
+  a.onclick = () => {
     document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('section').forEach(x=>x.classList.remove('active'));
     a.classList.add('active');
-    const t=a.dataset.target;
+    const t = a.dataset.target;
     document.getElementById(t).classList.add('active');
-    pages[t]&&pages[t]();
+    pages[t] && pages[t]();
   };
 });
-function goto(target){document.querySelector(`.nav a[data-target="${target}"]`).click()}
+function goto(target){ document.querySelector(`.nav a[data-target="${target}"]`).click() }
+window.goto = goto;
 
 /* =========================================================
    MODAL
 ========================================================= */
-function openModal(title,bodyHTML,footHTML){
-  document.getElementById('mTitle').textContent=title;
-  document.getElementById('mBody').innerHTML=bodyHTML;
-  document.getElementById('mFoot').innerHTML=footHTML||'';
+function openModal(title, bodyHTML, footHTML){
+  document.getElementById('mTitle').textContent = title;
+  document.getElementById('mBody').innerHTML = bodyHTML;
+  document.getElementById('mFoot').innerHTML = footHTML || '';
   document.getElementById('modal').classList.add('show');
 }
-function closeModal(){document.getElementById('modal').classList.remove('show')}
-window.closeModal=closeModal;
-document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
+function closeModal(){ document.getElementById('modal').classList.remove('show') }
+window.closeModal = closeModal;
+document.getElementById('modal').onclick = e => { if(e.target.id==='modal') closeModal() };
 
 /* =========================================================
    DASHBOARD
 ========================================================= */
 function renderDashboard(){
-  const totalDebit=DB.journals.reduce((s,j)=>s+j.lines.reduce((a,l)=>a+(+l.debit||0),0),0);
-  const kas=saldo('1001'),bank=saldo('1002'),piutang=saldo('1101'),utang=saldo('2001');
-  const pendapatan=DB.coa.filter(a=>a.tipe==='Pendapatan').reduce((s,a)=>s+saldo(a.kode),0);
-  const beban=DB.coa.filter(a=>a.tipe==='Beban').reduce((s,a)=>s+saldo(a.kode),0);
-  const laba=pendapatan-beban;
-  const el=document.getElementById('dashboard');
-  el.innerHTML=`
+  const kas = saldo('1001'), bank = saldo('1002');
+  const piutang = saldo('1101'), utang = saldo('2001');
+  const pendapatan = DB.coa.filter(a=>a.tipe==='Pendapatan').reduce((s,a)=>s+saldo(a.kode),0);
+  const beban = DB.coa.filter(a=>a.tipe==='Beban').reduce((s,a)=>s+saldo(a.kode),0);
+  const laba = pendapatan - beban;
+
+  document.getElementById('dashboard').innerHTML = `
     <h2>Dashboard</h2>
     <p class="sub">${esc(DB.company.nama)}</p>
     <div class="grid">
@@ -309,7 +483,7 @@ function renderDashboard(){
     </div>
     <div class="card">
       <h3 class="sec" style="margin-top:0">5 Transaksi Terakhir</h3>
-      ${DB.journals.length===0?'<div class="empty">Belum ada transaksi</div>':`
+      ${DB.journals.length===0 ? '<div class="empty">Belum ada transaksi</div>' : `
       <div class="tbl-wrap"><table>
         <tr><th>Tanggal</th><th>Ref</th><th>Keterangan</th><th class="num">Debit</th></tr>
         ${[...DB.journals].sort((a,b)=>b.tanggal.localeCompare(a.tanggal)).slice(0,5).map(j=>`
@@ -320,7 +494,7 @@ function renderDashboard(){
     </div>
     <div class="card">
       <div class="row">
-        <button class="danger" onclick="if(confirm('Reset semua data ke kondisi kosong?')){localStorage.removeItem('${LS}');loadDB();goto('dashboard');toast('Data direset')}">Reset Semua Data</button>
+        <button class="danger" onclick="resetAllData()">Reset Semua Data</button>
         <button class="ghost" onclick="exportData()">Export JSON</button>
         <button class="ghost" onclick="document.getElementById('impFile').click()">Import JSON</button>
         <input type="file" id="impFile" accept=".json" style="display:none" onchange="importData(event)">
@@ -328,24 +502,40 @@ function renderDashboard(){
     </div>
   `;
 }
+function resetAllData(){
+  if(!confirm('Reset semua data ke kondisi kosong?')) return;
+  localStorage.removeItem(LS);
+  DB = freshDB();
+  save();
+  goto('dashboard');
+  toast('Data direset');
+}
 function exportData(){
-  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='erp-backup-'+today()+'.json';a.click();
+  const blob = new Blob([JSON.stringify(DB,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'erp-backup-' + today() + '.json';
+  a.click();
 }
 function importData(e){
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{try{DB=JSON.parse(r.result);save();toast('Data diimport');goto('dashboard')}catch(x){toast('File tidak valid','bad')}};
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{ DB = JSON.parse(r.result); save(); toast('Data diimport'); goto('dashboard') }
+    catch(x){ toast('File tidak valid','bad') }
+  };
   r.readAsText(f);
 }
+window.resetAllData = resetAllData;
+window.exportData = exportData;
+window.importData = importData;
 
 /* =========================================================
    PERUSAHAAN
 ========================================================= */
 function renderPerusahaan(){
-  const c=DB.company;
-  document.getElementById('perusahaan').innerHTML=`
+  const c = DB.company;
+  document.getElementById('perusahaan').innerHTML = `
     <h2>Profil Perusahaan</h2>
     <p class="sub">Identitas entitas yang sedang dikelola di sistem ini.</p>
     <div class="card">
@@ -359,25 +549,25 @@ function renderPerusahaan(){
     </div>`;
 }
 function savePerusahaan(){
-  DB.company={nama:c_nama.value,alamat:c_alamat.value,telp:c_telp.value,npwp:c_npwp.value};
-  save();toast('Tersimpan');
+  DB.company = {nama:c_nama.value, alamat:c_alamat.value, telp:c_telp.value, npwp:c_npwp.value};
+  save(); toast('Tersimpan');
 }
+window.savePerusahaan = savePerusahaan;
 
 /* =========================================================
    COA
 ========================================================= */
 function renderCOA(){
-  const el=document.getElementById('coa');
-  const groups=['Aset','Liabilitas','Ekuitas','Pendapatan','Beban'];
-  el.innerHTML=`
+  const groups = ['Aset','Liabilitas','Ekuitas','Pendapatan','Beban'];
+  document.getElementById('coa').innerHTML = `
     <h2>Chart of Accounts</h2>
     <p class="sub">Daftar akun yang dipakai untuk posting jurnal.</p>
     <div class="row" style="margin-bottom:10px">
       <button onclick="editCOA()">+ Tambah Akun</button>
     </div>
     ${groups.map(g=>{
-      const rows=DB.coa.filter(a=>a.tipe===g).sort((a,b)=>a.kode.localeCompare(b.kode));
-      if(!rows.length)return'';
+      const rows = DB.coa.filter(a=>a.tipe===g).sort((a,b)=>a.kode.localeCompare(b.kode));
+      if(!rows.length) return '';
       return `<div class="card" style="padding:0;overflow:hidden">
         <div style="padding:10px 14px;background:var(--soft);font-weight:600;font-size:13px">${g}</div>
         <div class="tbl-wrap" style="border:0;border-radius:0">
@@ -386,50 +576,59 @@ function renderCOA(){
           ${rows.map(a=>`<tr>
             <td>${a.kode}</td><td>${esc(a.nama)}</td>
             <td class="num">${fmt(saldo(a.kode))}</td>
-            <td style="text-align:right"><button class="sm ghost" onclick="editCOA('${a.kode}')">Edit</button>
-            <button class="sm danger" onclick="delCOA('${a.kode}')">×</button></td>
+            <td style="text-align:right">
+              <button class="sm ghost" onclick="editCOA('${a.kode}')">Edit</button>
+              <button class="sm danger" onclick="delCOA('${a.kode}')">×</button>
+            </td>
           </tr>`).join('')}
         </table></div></div>`;
     }).join('')}
   `;
 }
 function editCOA(kode){
-  const a=kode?acc(kode):{kode:'',nama:'',tipe:'Aset'};
-  openModal(kode?'Edit Akun':'Tambah Akun',`
+  const a = kode ? acc(kode) : {kode:'', nama:'', tipe:'Aset'};
+  openModal(kode?'Edit Akun':'Tambah Akun', `
     <label class="f"><span>Kode Akun</span><input id="a_kode" value="${esc(a.kode)}" ${kode?'readonly':''}></label>
     <label class="f"><span>Nama Akun</span><input id="a_nama" value="${esc(a.nama)}"></label>
     <label class="f"><span>Tipe</span><select id="a_tipe">
       ${['Aset','Liabilitas','Ekuitas','Pendapatan','Beban'].map(t=>`<option ${t===a.tipe?'selected':''}>${t}</option>`).join('')}
     </select></label>
-  `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveCOA('${kode||''}')">Simpan</button>`);
+  `, `<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveCOA('${kode||''}')">Simpan</button>`);
 }
 function saveCOA(oldKode){
-  const kode=a_kode.value.trim(),nama=a_nama.value.trim(),tipe=a_tipe.value;
-  if(!kode||!nama)return toast('Kode & nama wajib','bad');
-  if(!oldKode&&acc(kode))return toast('Kode sudah ada','bad');
+  const kode = a_kode.value.trim(), nama = a_nama.value.trim(), tipe = a_tipe.value;
+  if(!kode || !nama) return toast('Kode & nama wajib','bad');
+  if(!oldKode && acc(kode)) return toast('Kode sudah ada','bad');
   if(oldKode){
-    const a=acc(oldKode);a.nama=nama;a.tipe=tipe;
-    if(oldKode!==kode){a.kode=kode;DB.journals.forEach(j=>j.lines.forEach(l=>{if(l.kode===oldKode)l.kode=kode}))}
-  }else DB.coa.push({kode,nama,tipe});
-  save();closeModal();renderCOA();toast('Tersimpan');
+    const a = acc(oldKode);
+    a.nama = nama; a.tipe = tipe;
+    if(oldKode !== kode){
+      a.kode = kode;
+      DB.journals.forEach(j=>j.lines.forEach(l=>{ if(l.kode===oldKode) l.kode=kode }));
+    }
+  }else DB.coa.push({kode, nama, tipe});
+  save(); closeModal(); renderCOA(); toast('Tersimpan');
 }
 function delCOA(kode){
-  const used=DB.journals.some(j=>j.lines.some(l=>l.kode===kode));
-  if(used)return toast('Akun sudah dipakai di jurnal, tidak bisa dihapus','bad');
-  if(!confirm('Hapus akun ini?'))return;
-  DB.coa=DB.coa.filter(a=>a.kode!==kode);save();renderCOA();toast('Terhapus');
+  const used = DB.journals.some(j=>j.lines.some(l=>l.kode===kode));
+  if(used) return toast('Akun sudah dipakai di jurnal, tidak bisa dihapus','bad');
+  if(!confirm('Hapus akun ini?')) return;
+  DB.coa = DB.coa.filter(a=>a.kode!==kode);
+  save(); renderCOA(); toast('Terhapus');
 }
-window.editCOA=editCOA;window.saveCOA=saveCOA;window.delCOA=delCOA;
+window.editCOA = editCOA;
+window.saveCOA = saveCOA;
+window.delCOA = delCOA;
 
 /* =========================================================
-   CUSTOMER / VENDOR
+   CUSTOMER
 ========================================================= */
 function renderCustomer(){
-  document.getElementById('customer').innerHTML=`
+  document.getElementById('customer').innerHTML = `
     <h2>Pelanggan</h2><p class="sub">Master data customer untuk transaksi penjualan.</p>
     <button onclick="editCust()">+ Tambah Pelanggan</button>
     <div class="card" style="padding:0;margin-top:12px">
-    ${DB.customers.length===0?'<div class="empty">Belum ada pelanggan</div>':`
+    ${DB.customers.length===0 ? '<div class="empty">Belum ada pelanggan</div>' : `
     <div class="tbl-wrap" style="border:0">
     <table><tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th></th></tr>
       ${DB.customers.map(c=>`<tr><td>${esc(c.nama)}</td><td>${esc(c.telp)}</td><td>${esc(c.alamat)}</td>
@@ -438,28 +637,35 @@ function renderCustomer(){
     </table></div>`}</div>`;
 }
 function editCust(id){
-  const c=id?DB.customers.find(x=>x.id===id):{nama:'',telp:'',alamat:''};
-  openModal(id?'Edit Pelanggan':'Tambah Pelanggan',`
+  const c = id ? DB.customers.find(x=>x.id===id) : {nama:'', telp:'', alamat:''};
+  openModal(id?'Edit Pelanggan':'Tambah Pelanggan', `
     <label class="f"><span>Nama</span><input id="cu_nama" value="${esc(c.nama)}"></label>
     <label class="f"><span>Telepon</span><input id="cu_telp" value="${esc(c.telp)}"></label>
     <label class="f"><span>Alamat</span><textarea id="cu_alamat" rows="2">${esc(c.alamat)}</textarea></label>
-  `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveCust('${id||''}')">Simpan</button>`);
+  `, `<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveCust('${id||''}')">Simpan</button>`);
 }
 function saveCust(id){
-  const nama=cu_nama.value.trim();if(!nama)return toast('Nama wajib','bad');
-  if(id){const c=DB.customers.find(x=>x.id===id);c.nama=nama;c.telp=cu_telp.value;c.alamat=cu_alamat.value}
-  else DB.customers.push({id:uid(),nama,telp:cu_telp.value,alamat:cu_alamat.value});
-  save();closeModal();renderCustomer();toast('Tersimpan');
+  const nama = cu_nama.value.trim(); if(!nama) return toast('Nama wajib','bad');
+  if(id){
+    const c = DB.customers.find(x=>x.id===id);
+    c.nama = nama; c.telp = cu_telp.value; c.alamat = cu_alamat.value;
+  }else DB.customers.push({id:uid(), nama, telp:cu_telp.value, alamat:cu_alamat.value});
+  save(); closeModal(); renderCustomer(); toast('Tersimpan');
 }
-function delCust(id){if(!confirm('Hapus?'))return;DB.customers=DB.customers.filter(c=>c.id!==id);save();renderCustomer()}
-window.editCust=editCust;window.saveCust=saveCust;window.delCust=delCust;
+function delCust(id){ if(!confirm('Hapus?')) return; DB.customers = DB.customers.filter(c=>c.id!==id); save(); renderCustomer() }
+window.editCust = editCust;
+window.saveCust = saveCust;
+window.delCust = delCust;
 
+/* =========================================================
+   VENDOR
+========================================================= */
 function renderVendor(){
-  document.getElementById('vendor').innerHTML=`
+  document.getElementById('vendor').innerHTML = `
     <h2>Pemasok / Vendor</h2><p class="sub">Master data supplier untuk transaksi pembelian.</p>
     <button onclick="editVend()">+ Tambah Vendor</button>
     <div class="card" style="padding:0;margin-top:12px">
-    ${DB.vendors.length===0?'<div class="empty">Belum ada vendor</div>':`
+    ${DB.vendors.length===0 ? '<div class="empty">Belum ada vendor</div>' : `
     <div class="tbl-wrap" style="border:0">
     <table><tr><th>Nama</th><th>Telepon</th><th>Alamat</th><th></th></tr>
       ${DB.vendors.map(c=>`<tr><td>${esc(c.nama)}</td><td>${esc(c.telp)}</td><td>${esc(c.alamat)}</td>
@@ -468,31 +674,35 @@ function renderVendor(){
     </table></div>`}</div>`;
 }
 function editVend(id){
-  const c=id?DB.vendors.find(x=>x.id===id):{nama:'',telp:'',alamat:''};
-  openModal(id?'Edit Vendor':'Tambah Vendor',`
+  const c = id ? DB.vendors.find(x=>x.id===id) : {nama:'', telp:'', alamat:''};
+  openModal(id?'Edit Vendor':'Tambah Vendor', `
     <label class="f"><span>Nama</span><input id="ve_nama" value="${esc(c.nama)}"></label>
     <label class="f"><span>Telepon</span><input id="ve_telp" value="${esc(c.telp)}"></label>
     <label class="f"><span>Alamat</span><textarea id="ve_alamat" rows="2">${esc(c.alamat)}</textarea></label>
-  `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveVend('${id||''}')">Simpan</button>`);
+  `, `<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveVend('${id||''}')">Simpan</button>`);
 }
 function saveVend(id){
-  const nama=ve_nama.value.trim();if(!nama)return toast('Nama wajib','bad');
-  if(id){const c=DB.vendors.find(x=>x.id===id);c.nama=nama;c.telp=ve_telp.value;c.alamat=ve_alamat.value}
-  else DB.vendors.push({id:uid(),nama,telp:ve_telp.value,alamat:ve_alamat.value});
-  save();closeModal();renderVendor();toast('Tersimpan');
+  const nama = ve_nama.value.trim(); if(!nama) return toast('Nama wajib','bad');
+  if(id){
+    const c = DB.vendors.find(x=>x.id===id);
+    c.nama = nama; c.telp = ve_telp.value; c.alamat = ve_alamat.value;
+  }else DB.vendors.push({id:uid(), nama, telp:ve_telp.value, alamat:ve_alamat.value});
+  save(); closeModal(); renderVendor(); toast('Tersimpan');
 }
-function delVend(id){if(!confirm('Hapus?'))return;DB.vendors=DB.vendors.filter(c=>c.id!==id);save();renderVendor()}
-window.editVend=editVend;window.saveVend=saveVend;window.delVend=delVend;
+function delVend(id){ if(!confirm('Hapus?')) return; DB.vendors = DB.vendors.filter(c=>c.id!==id); save(); renderVendor() }
+window.editVend = editVend;
+window.saveVend = saveVend;
+window.delVend = delVend;
 
 /* =========================================================
    BARANG
 ========================================================= */
 function renderBarang(){
-  document.getElementById('barang').innerHTML=`
+  document.getElementById('barang').innerHTML = `
     <h2>Barang & Jasa</h2><p class="sub">Master data produk/jasa. Stok dihitung otomatis dari transaksi.</p>
     <button onclick="editBarang()">+ Tambah Barang</button>
     <div class="card" style="padding:0;margin-top:12px">
-    ${DB.items.length===0?'<div class="empty">Belum ada barang</div>':`
+    ${DB.items.length===0 ? '<div class="empty">Belum ada barang</div>' : `
     <div class="tbl-wrap" style="border:0">
     <table><tr><th>Kode</th><th>Nama</th><th>Satuan</th><th class="num">Harga Beli</th><th class="num">Harga Jual</th><th class="num">Stok</th><th></th></tr>
       ${DB.items.map(x=>`<tr><td>${esc(x.kode)}</td><td>${esc(x.nama)}</td><td>${esc(x.satuan)}</td>
@@ -503,8 +713,8 @@ function renderBarang(){
     </table></div>`}</div>`;
 }
 function editBarang(id){
-  const x=id?DB.items.find(a=>a.id===id):{kode:'',nama:'',satuan:'pcs',hargaBeli:0,hargaJual:0,stok:0};
-  openModal(id?'Edit Barang':'Tambah Barang',`
+  const x = id ? DB.items.find(a=>a.id===id) : {kode:'', nama:'', satuan:'pcs', hargaBeli:0, hargaJual:0, stok:0};
+  openModal(id?'Edit Barang':'Tambah Barang', `
     <div class="split">
       <label class="f"><span>Kode</span><input id="b_kode" value="${esc(x.kode)}"></label>
       <label class="f"><span>Satuan</span><input id="b_satuan" value="${esc(x.satuan)}"></label>
@@ -515,25 +725,30 @@ function editBarang(id){
       <label class="f"><span>Harga Jual</span><input type="number" id="b_jual" value="${x.hargaJual}"></label>
     </div>
     <label class="f"><span>Stok Awal</span><input type="number" id="b_stok" value="${x.stok}"></label>
-  `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveBarang('${id||''}')">Simpan</button>`);
+  `, `<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveBarang('${id||''}')">Simpan</button>`);
 }
 function saveBarang(id){
-  const nama=b_nama.value.trim();if(!nama)return toast('Nama wajib','bad');
-  const data={kode:b_kode.value,nama,satuan:b_satuan.value,hargaBeli:+b_beli.value||0,hargaJual:+b_jual.value||0,stok:+b_stok.value||0};
-  if(id)Object.assign(DB.items.find(x=>x.id===id),data);
-  else DB.items.push({id:uid(),...data});
-  save();closeModal();renderBarang();toast('Tersimpan');
+  const nama = b_nama.value.trim(); if(!nama) return toast('Nama wajib','bad');
+  const data = {
+    kode:b_kode.value, nama, satuan:b_satuan.value,
+    hargaBeli:+b_beli.value||0, hargaJual:+b_jual.value||0, stok:+b_stok.value||0
+  };
+  if(id) Object.assign(DB.items.find(x=>x.id===id), data);
+  else DB.items.push({id:uid(), ...data});
+  save(); closeModal(); renderBarang(); toast('Tersimpan');
 }
-function delBarang(id){if(!confirm('Hapus?'))return;DB.items=DB.items.filter(x=>x.id!==id);save();renderBarang()}
-window.editBarang=editBarang;window.saveBarang=saveBarang;window.delBarang=delBarang;
+function delBarang(id){ if(!confirm('Hapus?')) return; DB.items = DB.items.filter(x=>x.id!==id); save(); renderBarang() }
+window.editBarang = editBarang;
+window.saveBarang = saveBarang;
+window.delBarang = delBarang;
 
 /* =========================================================
    PENJUALAN
 ========================================================= */
-let invLines=[{itemId:'',qty:1,harga:0}];
+let invLines = [{itemId:'', qty:1, harga:0}];
 function renderPenjualan(){
-  invLines=[{itemId:'',qty:1,harga:0}];
-  document.getElementById('penjualan').innerHTML=`
+  invLines = [{itemId:'', qty:1, harga:0}];
+  document.getElementById('penjualan').innerHTML = `
     <h2>Penjualan</h2><p class="sub">Buat invoice penjualan. Jurnal & stok otomatis terposting.</p>
     <div class="card">
       <div class="split">
@@ -555,15 +770,14 @@ function renderPenjualan(){
       <div class="row end" style="margin-top:10px">
         <button onclick="saveInvoice()">Simpan Invoice</button>
       </div>
-      <div class="fb" id="inv_fb"></div>
     </div>
     <div class="card" style="padding:0">
       <div style="padding:12px 14px;background:var(--soft);font-weight:600;font-size:13px">Riwayat Invoice</div>
-      ${DB.invoices.length===0?'<div class="empty">Belum ada invoice</div>':`
+      ${DB.invoices.length===0 ? '<div class="empty">Belum ada invoice</div>' : `
       <div class="tbl-wrap" style="border:0">
       <table><tr><th>No</th><th>Tanggal</th><th>Pelanggan</th><th>Bayar</th><th class="num">Total</th><th></th></tr>
       ${DB.invoices.slice().reverse().map(v=>{
-        const c=DB.customers.find(x=>x.id===v.customerId);
+        const c = DB.customers.find(x=>x.id===v.customerId);
         return `<tr><td>${v.no}</td><td>${v.tanggal}</td><td>${esc(c?c.nama:'Umum')}</td>
         <td><span class="badge ${v.bayar==='kredit'?'warn':'ok'}">${v.bayar}</span></td>
         <td class="num">${fmt(v.total)}</td>
@@ -574,8 +788,7 @@ function renderPenjualan(){
   renderInvLines();
 }
 function renderInvLines(){
-  const box=document.getElementById('inv_items');
-  box.innerHTML=invLines.map((l,i)=>`
+  document.getElementById('inv_items').innerHTML = invLines.map((l,i)=>`
     <div class="jline">
       <select onchange="invChange(${i},'itemId',this.value)">
         <option value="">— pilih barang —</option>
@@ -586,62 +799,71 @@ function renderInvLines(){
       <button class="sm danger" onclick="invDel(${i})">×</button>
     </div>
   `).join('');
-  const total=invLines.reduce((s,l)=>s+(+l.qty||0)*(+l.harga||0),0);
-  document.getElementById('inv_total').textContent=fmt(total);
+  document.getElementById('inv_total').textContent = fmt(invLines.reduce((s,l)=>s+(+l.qty||0)*(+l.harga||0),0));
 }
-function invChange(i,field,val){
-  invLines[i][field]=val;
-  if(field==='itemId'){const x=DB.items.find(a=>a.id===val);if(x)invLines[i].harga=x.hargaJual}
+function invChange(i, field, val){
+  invLines[i][field] = val;
+  if(field==='itemId'){
+    const x = DB.items.find(a=>a.id===val);
+    if(x) invLines[i].harga = x.hargaJual;
+  }
   renderInvLines();
 }
-function addInvLine(){invLines.push({itemId:'',qty:1,harga:0});renderInvLines()}
-function invDel(i){invLines.splice(i,1);if(!invLines.length)invLines.push({itemId:'',qty:1,harga:0});renderInvLines()}
-window.addInvLine=addInvLine;window.invDel=invDel;window.invChange=invChange;
+function addInvLine(){ invLines.push({itemId:'', qty:1, harga:0}); renderInvLines() }
+function invDel(i){ invLines.splice(i,1); if(!invLines.length) invLines.push({itemId:'', qty:1, harga:0}); renderInvLines() }
+window.addInvLine = addInvLine;
+window.invDel = invDel;
+window.invChange = invChange;
 
 function saveInvoice(){
-  const valid=invLines.filter(l=>l.itemId&&l.qty>0);
-  if(!valid.length)return toast('Minimal 1 item','bad');
-  const tanggal=inv_tgl.value,customerId=inv_cust.value,bayar=inv_bayar.value;
-  // cek stok
+  const valid = invLines.filter(l=>l.itemId && l.qty>0);
+  if(!valid.length) return toast('Minimal 1 item','bad');
+  const tanggal = inv_tgl.value, customerId = inv_cust.value, bayar = inv_bayar.value;
   for(const l of valid){
-    const it=DB.items.find(x=>x.id===l.itemId);
-    if(l.qty>it.stok)return toast(`Stok ${it.nama} tidak cukup (${it.stok})`,'bad');
+    const it = DB.items.find(x=>x.id===l.itemId);
+    if(l.qty > it.stok) return toast(`Stok ${it.nama} tidak cukup (${it.stok})`,'bad');
   }
-  const total=valid.reduce((s,l)=>s+l.qty*l.harga,0);
-  const hpp=valid.reduce((s,l)=>{const it=DB.items.find(x=>x.id===l.itemId);return s+l.qty*(it.hargaBeli||0)},0);
-  DB.counters.inv=(DB.counters.inv||0)+1;
-  const no='INV-'+String(DB.counters.inv).padStart(4,'0');
-  // update stok
-  valid.forEach(l=>{const it=DB.items.find(x=>x.id===l.itemId);it.stok-=l.qty});
-  const cust=DB.customers.find(c=>c.id===customerId);
-  const lines=[];
-  const kasKode=bayar==='kredit'?'1101':(bayar==='transfer'?'1002':'1001');
-  lines.push({kode:kasKode,debit:total,kredit:0});
-  lines.push({kode:'4001',debit:0,kredit:total});
-  if(hpp>0){lines.push({kode:'5001',debit:hpp,kredit:0});lines.push({kode:'1201',debit:0,kredit:hpp})}
-  const j=postJournal({tanggal,ref:no,ket:`Penjualan ke ${cust?cust.nama:'Umum'}`,lines,source:'invoice'});
-  j.refId=null;
-  const inv={id:j.id,no,tanggal,customerId,bayar,total,hpp,items:valid.map(l=>({...l}))};
-  DB.invoices.push(inv);save();
-  renderPenjualan();toast('Invoice disimpan & jurnal diposting');
+  const total = valid.reduce((s,l)=>s+l.qty*l.harga,0);
+  const hpp = valid.reduce((s,l)=>{ const it=DB.items.find(x=>x.id===l.itemId); return s + l.qty*(it.hargaBeli||0) },0);
+
+  DB.counters.inv = (DB.counters.inv||0) + 1;
+  const no = 'INV-' + String(DB.counters.inv).padStart(4,'0');
+
+  valid.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); it.stok -= l.qty });
+
+  const cust = DB.customers.find(c=>c.id===customerId);
+  const lines = [];
+  const kasKode = bayar==='kredit' ? '1101' : (bayar==='transfer' ? '1002' : '1001');
+  lines.push({kode:kasKode, debit:total, kredit:0});
+  lines.push({kode:'4001', debit:0, kredit:total});
+  if(hpp>0){
+    lines.push({kode:'5001', debit:hpp, kredit:0});
+    lines.push({kode:'1201', debit:0, kredit:hpp});
+  }
+  const j = postJournal({tanggal, ref:no, ket:`Penjualan ke ${cust?cust.nama:'Umum'}`, lines, source:'invoice'});
+  DB.invoices.push({id:j.id, no, tanggal, customerId, bayar, total, hpp, items:valid.map(l=>({...l}))});
+  save();
+  renderPenjualan();
+  toast('Invoice disimpan & jurnal diposting');
 }
 function delInvoice(id){
-  if(!confirm('Hapus invoice beserta jurnalnya? Stok akan dikembalikan.'))return;
-  const inv=DB.invoices.find(v=>v.id===id);
-  inv.items.forEach(l=>{const it=DB.items.find(x=>x.id===l.itemId);if(it)it.stok+=l.qty});
-  DB.journals=DB.journals.filter(j=>j.id!==id);
-  DB.invoices=DB.invoices.filter(v=>v.id!==id);
-  save();renderPenjualan();toast('Terhapus');
+  if(!confirm('Hapus invoice beserta jurnalnya? Stok akan dikembalikan.')) return;
+  const inv = DB.invoices.find(v=>v.id===id);
+  inv.items.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); if(it) it.stok += l.qty });
+  DB.journals = DB.journals.filter(j=>j.id!==id);
+  DB.invoices = DB.invoices.filter(v=>v.id!==id);
+  save(); renderPenjualan(); toast('Terhapus');
 }
-window.saveInvoice=saveInvoice;window.delInvoice=delInvoice;
+window.saveInvoice = saveInvoice;
+window.delInvoice = delInvoice;
 
 /* =========================================================
    PEMBELIAN
 ========================================================= */
-let purLines=[{itemId:'',qty:1,harga:0}];
+let purLines = [{itemId:'', qty:1, harga:0}];
 function renderPembelian(){
-  purLines=[{itemId:'',qty:1,harga:0}];
-  document.getElementById('pembelian').innerHTML=`
+  purLines = [{itemId:'', qty:1, harga:0}];
+  document.getElementById('pembelian').innerHTML = `
     <h2>Pembelian</h2><p class="sub">Faktur pembelian barang dari vendor. Stok & jurnal otomatis.</p>
     <div class="card">
       <div class="split">
@@ -664,11 +886,11 @@ function renderPembelian(){
     </div>
     <div class="card" style="padding:0">
       <div style="padding:12px 14px;background:var(--soft);font-weight:600;font-size:13px">Riwayat Pembelian</div>
-      ${DB.purchases.length===0?'<div class="empty">Belum ada pembelian</div>':`
+      ${DB.purchases.length===0 ? '<div class="empty">Belum ada pembelian</div>' : `
       <div class="tbl-wrap" style="border:0">
       <table><tr><th>No</th><th>Tanggal</th><th>Vendor</th><th>Bayar</th><th class="num">Total</th><th></th></tr>
       ${DB.purchases.slice().reverse().map(v=>{
-        const c=DB.vendors.find(x=>x.id===v.vendorId);
+        const c = DB.vendors.find(x=>x.id===v.vendorId);
         return `<tr><td>${v.no}</td><td>${v.tanggal}</td><td>${esc(c?c.nama:'Umum')}</td>
         <td><span class="badge ${v.bayar==='kredit'?'warn':'ok'}">${v.bayar}</span></td>
         <td class="num">${fmt(v.total)}</td>
@@ -679,8 +901,7 @@ function renderPembelian(){
   renderPurLines();
 }
 function renderPurLines(){
-  const box=document.getElementById('pur_items');
-  box.innerHTML=purLines.map((l,i)=>`
+  document.getElementById('pur_items').innerHTML = purLines.map((l,i)=>`
     <div class="jline">
       <select onchange="purChange(${i},'itemId',this.value)">
         <option value="">— pilih barang —</option>
@@ -690,46 +911,55 @@ function renderPurLines(){
       <input type="number" value="${l.harga}" onchange="purChange(${i},'harga',+this.value)">
       <button class="sm danger" onclick="purDel(${i})">×</button>
     </div>`).join('');
-  document.getElementById('pur_total').textContent=fmt(purLines.reduce((s,l)=>s+(+l.qty||0)*(+l.harga||0),0));
+  document.getElementById('pur_total').textContent = fmt(purLines.reduce((s,l)=>s+(+l.qty||0)*(+l.harga||0),0));
 }
-function purChange(i,f,v){purLines[i][f]=v;if(f==='itemId'){const x=DB.items.find(a=>a.id===v);if(x)purLines[i].harga=x.hargaBeli}renderPurLines()}
-function addPurLine(){purLines.push({itemId:'',qty:1,harga:0});renderPurLines()}
-function purDel(i){purLines.splice(i,1);if(!purLines.length)purLines.push({itemId:'',qty:1,harga:0});renderPurLines()}
-window.addPurLine=addPurLine;window.purDel=purDel;window.purChange=purChange;
+function purChange(i, f, v){
+  purLines[i][f] = v;
+  if(f==='itemId'){ const x=DB.items.find(a=>a.id===v); if(x) purLines[i].harga = x.hargaBeli }
+  renderPurLines();
+}
+function addPurLine(){ purLines.push({itemId:'', qty:1, harga:0}); renderPurLines() }
+function purDel(i){ purLines.splice(i,1); if(!purLines.length) purLines.push({itemId:'', qty:1, harga:0}); renderPurLines() }
+window.addPurLine = addPurLine;
+window.purDel = purDel;
+window.purChange = purChange;
 
 function savePurchase(){
-  const valid=purLines.filter(l=>l.itemId&&l.qty>0);
-  if(!valid.length)return toast('Minimal 1 item','bad');
-  const tanggal=pur_tgl.value,vendorId=pur_vend.value,bayar=pur_bayar.value;
-  const total=valid.reduce((s,l)=>s+l.qty*l.harga,0);
-  DB.counters.pur=(DB.counters.pur||0)+1;
-  const no='PUR-'+String(DB.counters.pur).padStart(4,'0');
-  valid.forEach(l=>{const it=DB.items.find(x=>x.id===l.itemId);it.stok+=l.qty;it.hargaBeli=l.harga});
-  const vend=DB.vendors.find(c=>c.id===vendorId);
-  const lines=[];
-  const kasKode=bayar==='kredit'?'2001':(bayar==='transfer'?'1002':'1001');
-  lines.push({kode:'1201',debit:total,kredit:0});
-  lines.push({kode:kasKode,debit:0,kredit:total});
-  const j=postJournal({tanggal,ref:no,ket:`Pembelian dari ${vend?vend.nama:'Umum'}`,lines,source:'purchase'});
-  DB.purchases.push({id:j.id,no,tanggal,vendorId,bayar,total,items:valid.map(l=>({...l}))});
-  save();renderPembelian();toast('Faktur disimpan & jurnal diposting');
+  const valid = purLines.filter(l=>l.itemId && l.qty>0);
+  if(!valid.length) return toast('Minimal 1 item','bad');
+  const tanggal = pur_tgl.value, vendorId = pur_vend.value, bayar = pur_bayar.value;
+  const total = valid.reduce((s,l)=>s+l.qty*l.harga,0);
+  DB.counters.pur = (DB.counters.pur||0) + 1;
+  const no = 'PUR-' + String(DB.counters.pur).padStart(4,'0');
+  valid.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); it.stok += l.qty; it.hargaBeli = l.harga });
+  const vend = DB.vendors.find(c=>c.id===vendorId);
+  const lines = [];
+  const kasKode = bayar==='kredit' ? '2001' : (bayar==='transfer' ? '1002' : '1001');
+  lines.push({kode:'1201', debit:total, kredit:0});
+  lines.push({kode:kasKode, debit:0, kredit:total});
+  const j = postJournal({tanggal, ref:no, ket:`Pembelian dari ${vend?vend.nama:'Umum'}`, lines, source:'purchase'});
+  DB.purchases.push({id:j.id, no, tanggal, vendorId, bayar, total, items:valid.map(l=>({...l}))});
+  save();
+  renderPembelian();
+  toast('Faktur disimpan & jurnal diposting');
 }
 function delPurchase(id){
-  if(!confirm('Hapus faktur & jurnalnya? Stok dikembalikan.'))return;
-  const v=DB.purchases.find(x=>x.id===id);
-  v.items.forEach(l=>{const it=DB.items.find(x=>x.id===l.itemId);if(it)it.stok-=l.qty});
-  DB.journals=DB.journals.filter(j=>j.id!==id);
-  DB.purchases=DB.purchases.filter(x=>x.id!==id);
-  save();renderPembelian();toast('Terhapus');
+  if(!confirm('Hapus faktur & jurnalnya? Stok dikembalikan.')) return;
+  const v = DB.purchases.find(x=>x.id===id);
+  v.items.forEach(l=>{ const it=DB.items.find(x=>x.id===l.itemId); if(it) it.stok -= l.qty });
+  DB.journals = DB.journals.filter(j=>j.id!==id);
+  DB.purchases = DB.purchases.filter(x=>x.id!==id);
+  save(); renderPembelian(); toast('Terhapus');
 }
-window.savePurchase=savePurchase;window.delPurchase=delPurchase;
+window.savePurchase = savePurchase;
+window.delPurchase = delPurchase;
 
 /* =========================================================
-   PENERIMAAN & PENGELUARAN KAS
+   PENERIMAAN KAS
 ========================================================= */
 function renderPenerimaan(){
-  document.getElementById('penerimaan').innerHTML=`
-    <h2>Penerimaan Kas / Bank</h2><p class="sub">Catat uang masuk selain dari invoice penjualan (mis. pelunasan piutang, modal).</p>
+  document.getElementById('penerimaan').innerHTML = `
+    <h2>Penerimaan Kas / Bank</h2><p class="sub">Catat uang masuk selain invoice penjualan.</p>
     <div class="card">
       <div class="split">
         <label class="f"><span>Tanggal</span><input type="date" id="rc_tgl" value="${today()}"></label>
@@ -738,7 +968,8 @@ function renderPenerimaan(){
         </select></label>
       </div>
       <label class="f"><span>Sumber / Akun Kredit</span><select id="rc_kredit">
-        ${DB.coa.filter(a=>['Aset','Liabilitas','Ekuitas','Pendapatan'].includes(a.tipe)).map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
+        ${DB.coa.filter(a=>['Aset','Liabilitas','Ekuitas','Pendapatan'].includes(a.tipe))
+          .map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select></label>
       <label class="f"><span>Jumlah</span><input type="number" id="rc_jml" value="0"></label>
       <label class="f"><span>Keterangan</span><input id="rc_ket" placeholder="mis: Pelunasan piutang PT ABC"></label>
@@ -746,16 +977,22 @@ function renderPenerimaan(){
     </div>`;
 }
 function saveTerima(){
-  const jml=+rc_jml.value;if(!jml)return toast('Jumlah wajib','bad');
-  const lines=[{kode:rc_akun.value,debit:jml,kredit:0},{kode:rc_kredit.value,debit:0,kredit:jml}];
-  postJournal({tanggal:rc_tgl.value,ref:'RC-'+Date.now().toString().slice(-5),ket:rc_ket.value||'Penerimaan kas',lines});
-  toast('Tersimpan');rc_jml.value=0;rc_ket.value='';
+  const jml = +rc_jml.value; if(!jml) return toast('Jumlah wajib','bad');
+  const lines = [
+    {kode:rc_akun.value, debit:jml, kredit:0},
+    {kode:rc_kredit.value, debit:0, kredit:jml}
+  ];
+  postJournal({tanggal:rc_tgl.value, ref:'RC-'+Date.now().toString().slice(-5), ket:rc_ket.value||'Penerimaan kas', lines});
+  toast('Tersimpan'); rc_jml.value=0; rc_ket.value='';
 }
-window.saveTerima=saveTerima;
+window.saveTerima = saveTerima;
 
+/* =========================================================
+   PENGELUARAN KAS
+========================================================= */
 function renderPengeluaran(){
-  document.getElementById('pengeluaran').innerHTML=`
-    <h2>Pengeluaran Kas / Bank</h2><p class="sub">Catat uang keluar untuk beban operasional, pembayaran utang, dll.</p>
+  document.getElementById('pengeluaran').innerHTML = `
+    <h2>Pengeluaran Kas / Bank</h2><p class="sub">Catat uang keluar untuk beban, utang, dll.</p>
     <div class="card">
       <div class="split">
         <label class="f"><span>Tanggal</span><input type="date" id="pc_tgl" value="${today()}"></label>
@@ -764,7 +1001,8 @@ function renderPengeluaran(){
         </select></label>
       </div>
       <label class="f"><span>Untuk / Akun Debit</span><select id="pc_debit">
-        ${DB.coa.filter(a=>['Aset','Liabilitas','Ekuitas','Beban'].includes(a.tipe)).map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
+        ${DB.coa.filter(a=>['Aset','Liabilitas','Ekuitas','Beban'].includes(a.tipe))
+          .map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select></label>
       <label class="f"><span>Jumlah</span><input type="number" id="pc_jml" value="0"></label>
       <label class="f"><span>Keterangan</span><input id="pc_ket" placeholder="mis: Bayar listrik bulan ini"></label>
@@ -772,19 +1010,22 @@ function renderPengeluaran(){
     </div>`;
 }
 function saveKeluar(){
-  const jml=+pc_jml.value;if(!jml)return toast('Jumlah wajib','bad');
-  const lines=[{kode:pc_debit.value,debit:jml,kredit:0},{kode:pc_akun.value,debit:0,kredit:jml}];
-  postJournal({tanggal:pc_tgl.value,ref:'PC-'+Date.now().toString().slice(-5),ket:pc_ket.value||'Pengeluaran kas',lines});
-  toast('Tersimpan');pc_jml.value=0;pc_ket.value='';
+  const jml = +pc_jml.value; if(!jml) return toast('Jumlah wajib','bad');
+  const lines = [
+    {kode:pc_debit.value, debit:jml, kredit:0},
+    {kode:pc_akun.value, debit:0, kredit:jml}
+  ];
+  postJournal({tanggal:pc_tgl.value, ref:'PC-'+Date.now().toString().slice(-5), ket:pc_ket.value||'Pengeluaran kas', lines});
+  toast('Tersimpan'); pc_jml.value=0; pc_ket.value='';
 }
-window.saveKeluar=saveKeluar;
+window.saveKeluar = saveKeluar;
 
 /* =========================================================
    JURNAL UMUM
 ========================================================= */
-let jvLines=[{kode:'',debit:0,kredit:0},{kode:'',debit:0,kredit:0}];
+let jvLines = [{kode:'', debit:0, kredit:0}, {kode:'', debit:0, kredit:0}];
 function renderJurnalUmum(){
-  document.getElementById('jurnalumum').innerHTML=`
+  document.getElementById('jurnalumum').innerHTML = `
     <h2>Jurnal Umum</h2><p class="sub">Input jurnal manual (debit = kredit).</p>
     <div class="card">
       <div class="split">
@@ -799,12 +1040,11 @@ function renderJurnalUmum(){
         Debit: <b id="jv_d">Rp 0</b> · Kredit: <b id="jv_k">Rp 0</b>
       </div>
       <div class="row end" style="margin-top:10px"><button onclick="saveJv()">Posting Jurnal</button></div>
-      <div class="fb" id="jv_fb"></div>
     </div>`;
   renderJvLines();
 }
 function renderJvLines(){
-  document.getElementById('jv_items').innerHTML=jvLines.map((l,i)=>`
+  document.getElementById('jv_items').innerHTML = jvLines.map((l,i)=>`
     <div class="jline">
       <select onchange="jvChange(${i},'kode',this.value)">
         <option value="">— akun —</option>
@@ -814,41 +1054,49 @@ function renderJvLines(){
       <input type="number" placeholder="Kredit" value="${l.kredit||''}" onchange="jvChange(${i},'kredit',+this.value)">
       <button class="sm danger" onclick="jvDel(${i})">×</button>
     </div>`).join('');
-  const d=jvLines.reduce((s,l)=>s+(+l.debit||0),0);
-  const k=jvLines.reduce((s,l)=>s+(+l.kredit||0),0);
-  document.getElementById('jv_d').textContent=fmt(d);
-  document.getElementById('jv_k').textContent=fmt(k);
+  const d = jvLines.reduce((s,l)=>s+(+l.debit||0),0);
+  const k = jvLines.reduce((s,l)=>s+(+l.kredit||0),0);
+  document.getElementById('jv_d').textContent = fmt(d);
+  document.getElementById('jv_k').textContent = fmt(k);
 }
-function jvChange(i,f,v){jvLines[i][f]=v;if(f==='debit'&&v)jvLines[i].kredit=0;if(f==='kredit'&&v)jvLines[i].debit=0;renderJvLines()}
-function addJvLine(){jvLines.push({kode:'',debit:0,kredit:0});renderJvLines()}
-function jvDel(i){jvLines.splice(i,1);if(jvLines.length<2)jvLines.push({kode:'',debit:0,kredit:0});renderJvLines()}
-window.addJvLine=addJvLine;window.jvDel=jvDel;window.jvChange=jvChange;
+function jvChange(i, f, v){
+  jvLines[i][f] = v;
+  if(f==='debit' && v) jvLines[i].kredit = 0;
+  if(f==='kredit' && v) jvLines[i].debit = 0;
+  renderJvLines();
+}
+function addJvLine(){ jvLines.push({kode:'', debit:0, kredit:0}); renderJvLines() }
+function jvDel(i){ jvLines.splice(i,1); if(jvLines.length<2) jvLines.push({kode:'', debit:0, kredit:0}); renderJvLines() }
+window.addJvLine = addJvLine;
+window.jvDel = jvDel;
+window.jvChange = jvChange;
 function saveJv(){
-  const lines=jvLines.filter(l=>l.kode&&((+l.debit||0)||(+l.kredit||0)));
-  const d=lines.reduce((s,l)=>s+(+l.debit||0),0);
-  const k=lines.reduce((s,l)=>s+(+l.kredit||0),0);
-  if(!lines.length)return toast('Isi minimal 1 baris','bad');
-  if(d!==k)return toast(`Debit (${fmt(d)}) ≠ Kredit (${fmt(k)})`,'bad');
-  postJournal({tanggal:jv_tgl.value,ref:jv_ref.value||'JV-'+Date.now().toString().slice(-4),ket:jv_ket.value||'Jurnal umum',lines});
-  toast('Jurnal diposting');jvLines=[{kode:'',debit:0,kredit:0},{kode:'',debit:0,kredit:0}];renderJurnalUmum();
+  const lines = jvLines.filter(l=>l.kode && ((+l.debit||0)||(+l.kredit||0)));
+  const d = lines.reduce((s,l)=>s+(+l.debit||0),0);
+  const k = lines.reduce((s,l)=>s+(+l.kredit||0),0);
+  if(!lines.length) return toast('Isi minimal 1 baris','bad');
+  if(d!==k) return toast(`Debit (${fmt(d)}) ≠ Kredit (${fmt(k)})`,'bad');
+  postJournal({tanggal:jv_tgl.value, ref:jv_ref.value||'JV-'+Date.now().toString().slice(-4), ket:jv_ket.value||'Jurnal umum', lines});
+  toast('Jurnal diposting');
+  jvLines = [{kode:'', debit:0, kredit:0}, {kode:'', debit:0, kredit:0}];
+  renderJurnalUmum();
 }
-window.saveJv=saveJv;
+window.saveJv = saveJv;
 
 /* =========================================================
    KARTU STOK
 ========================================================= */
 function renderKartuStok(){
-  const el=document.getElementById('kartustok');
-  const sel=window._kartuItem||(DB.items[0]&&DB.items[0].id)||'';
-  window._kartuItem=sel;
-  const it=DB.items.find(x=>x.id===sel);
-  let mutasi=[];
+  const sel = window._kartuItem || (DB.items[0] && DB.items[0].id) || '';
+  window._kartuItem = sel;
+  const it = DB.items.find(x=>x.id===sel);
+  let mutasi = [];
   if(it){
-    DB.invoices.forEach(v=>v.items.forEach(l=>{if(l.itemId===it.id)mutasi.push({tgl:v.tanggal,ref:v.no,ket:'Penjualan',masuk:0,keluar:l.qty})}));
-    DB.purchases.forEach(v=>v.items.forEach(l=>{if(l.itemId===it.id)mutasi.push({tgl:v.tanggal,ref:v.no,ket:'Pembelian',masuk:l.qty,keluar:0})}));
+    DB.invoices.forEach(v=>v.items.forEach(l=>{ if(l.itemId===it.id) mutasi.push({tgl:v.tanggal, ref:v.no, ket:'Penjualan', masuk:0, keluar:l.qty}) }));
+    DB.purchases.forEach(v=>v.items.forEach(l=>{ if(l.itemId===it.id) mutasi.push({tgl:v.tanggal, ref:v.no, ket:'Pembelian', masuk:l.qty, keluar:0}) }));
     mutasi.sort((a,b)=>a.tgl.localeCompare(b.tgl));
   }
-  el.innerHTML=`
+  document.getElementById('kartustok').innerHTML = `
     <h2>Kartu Stok</h2><p class="sub">Riwayat masuk-keluar per barang.</p>
     <div class="card">
       <label class="f"><span>Pilih Barang</span>
@@ -857,25 +1105,28 @@ function renderKartuStok(){
           ${DB.items.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(x.nama)}</option>`).join('')}
         </select></label>
     </div>
-    ${!it?'<div class="card empty">Pilih barang untuk melihat kartu stok</div>':`
+    ${!it ? '<div class="card empty">Pilih barang untuk melihat kartu stok</div>' : `
     <div class="card" style="padding:0">
       <div style="padding:12px 14px;background:var(--soft);font-weight:600">${esc(it.nama)} — Saldo akhir: ${it.stok} ${esc(it.satuan)}</div>
       <div class="tbl-wrap" style="border:0">
       <table>
         <tr><th>Tanggal</th><th>Ref</th><th>Keterangan</th><th class="num">Masuk</th><th class="num">Keluar</th><th class="num">Saldo</th></tr>
-        ${(()=>{let s=0;return mutasi.map(m=>{s+=m.masuk-m.keluar;return `<tr><td>${m.tgl}</td><td>${m.ref}</td><td>${m.ket}</td>
-          <td class="num">${m.masuk||''}</td><td class="num">${m.keluar||''}</td><td class="num"><b>${s}</b></td></tr>`}).join('')})()}
-        ${mutasi.length===0?'<tr><td colspan="6" class="empty">Belum ada mutasi</td></tr>':''}
+        ${(()=>{ let s=0; return mutasi.map(m=>{ s += m.masuk - m.keluar;
+          return `<tr><td>${m.tgl}</td><td>${m.ref}</td><td>${m.ket}</td>
+            <td class="num">${m.masuk||''}</td><td class="num">${m.keluar||''}</td><td class="num"><b>${s}</b></td></tr>`
+        }).join('') })()}
+        ${mutasi.length===0 ? '<tr><td colspan="6" class="empty">Belum ada mutasi</td></tr>' : ''}
       </table></div>
     </div>`}
   `;
 }
+window.renderKartuStok = renderKartuStok;
 
 /* =========================================================
    STOCK OPNAME
 ========================================================= */
 function renderOpname(){
-  document.getElementById('opname').innerHTML=`
+  document.getElementById('opname').innerHTML = `
     <h2>Stock Opname</h2><p class="sub">Sesuaikan stok sistem dengan hasil hitung fisik. Selisih otomatis dijurnal.</p>
     <div class="card">
       <label class="f"><span>Tanggal Opname</span><input type="date" id="op_tgl" value="${today()}"></label>
@@ -891,52 +1142,54 @@ function renderOpname(){
           </tr>`).join('')}
       </table></div>
       <div class="row end" style="margin-top:12px"><button onclick="saveOpname()">Posting Penyesuaian</button></div>
-      <div class="fb" id="op_fb"></div>
     </div>`;
   document.querySelectorAll('[data-opid]').forEach(inp=>{
-    inp.oninput=()=>{const x=DB.items.find(a=>a.id===inp.dataset.opid);const sel=(+inp.value||0)-x.stok;
-      document.querySelector(`[data-opsel="${inp.dataset.opid}"]`).textContent=sel>0?'+'+sel:sel};
+    inp.oninput = () => {
+      const x = DB.items.find(a=>a.id===inp.dataset.opid);
+      const sel = (+inp.value||0) - x.stok;
+      document.querySelector(`[data-opsel="${inp.dataset.opid}"]`).textContent = sel>0 ? '+'+sel : sel;
+    };
   });
 }
 function saveOpname(){
-  const tgl=op_tgl.value;
-  let totalKoreksi=0;
-  const detail=[];
+  const tgl = op_tgl.value;
+  let totalKoreksi = 0;
+  const detail = [];
   document.querySelectorAll('[data-opid]').forEach(inp=>{
-    const x=DB.items.find(a=>a.id===inp.dataset.opid);
-    const fisik=+inp.value||0;
-    const sel=fisik-x.stok;
-    if(sel!==0){
-      const nilai=sel*(x.hargaBeli||0);
-      totalKoreksi+=nilai;
-      detail.push({x,sel,nilai});
-      x.stok=fisik;
+    const x = DB.items.find(a=>a.id===inp.dataset.opid);
+    const fisik = +inp.value||0;
+    const sel = fisik - x.stok;
+    if(sel !== 0){
+      const nilai = sel * (x.hargaBeli||0);
+      totalKoreksi += nilai;
+      detail.push({x, sel, nilai});
+      x.stok = fisik;
     }
   });
-  if(!detail.length)return toast('Tidak ada selisih');
-  // Jurnal: jika selisih positif (stok fisik > sistem) => Debit Persediaan, Kredit Selisih Persediaan
-  // Jika negatif => Debit Selisih Persediaan, Kredit Persediaan
-  const lines=[];
-  if(totalKoreksi>=0){
-    lines.push({kode:'1201',debit:totalKoreksi,kredit:0});
-    lines.push({kode:'6901',debit:0,kredit:totalKoreksi});
+  if(!detail.length) return toast('Tidak ada selisih');
+  const lines = [];
+  if(totalKoreksi >= 0){
+    lines.push({kode:'1201', debit:totalKoreksi, kredit:0});
+    lines.push({kode:'6901', debit:0, kredit:totalKoreksi});
   }else{
-    lines.push({kode:'6901',debit:-totalKoreksi,kredit:0});
-    lines.push({kode:'1201',debit:0,kredit:-totalKoreksi});
+    lines.push({kode:'6901', debit:-totalKoreksi, kredit:0});
+    lines.push({kode:'1201', debit:0, kredit:-totalKoreksi});
   }
-  postJournal({tanggal:tgl,ref:'OP-'+Date.now().toString().slice(-4),ket:'Penyesuaian stock opname',lines});
-  save();renderOpname();toast('Opname diposting');
+  postJournal({tanggal:tgl, ref:'OP-'+Date.now().toString().slice(-4), ket:'Penyesuaian stock opname', lines});
+  save(); renderOpname(); toast('Opname diposting');
 }
-window.saveOpname=saveOpname;
+window.saveOpname = saveOpname;
 
 /* =========================================================
    LAPORAN
 ========================================================= */
 function filterJournals(){
-  const from=window._lapFrom||'',to=window._lapTo||'';
-  return DB.journals.filter(j=>(!from||j.tanggal>=from)&&(!to||j.tanggal<=to)).sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+  const from = window._lapFrom || '', to = window._lapTo || '';
+  return DB.journals
+    .filter(j => (!from || j.tanggal >= from) && (!to || j.tanggal <= to))
+    .sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
 }
-function filterBar(from,to,extra){
+function filterBar(from, to, extra){
   return `<div class="row" style="margin-bottom:12px">
     <label class="f" style="margin:0"><span>Dari</span><input type="date" id="lapFrom" value="${from||''}"></label>
     <label class="f" style="margin:0"><span>Sampai</span><input type="date" id="lapTo" value="${to||''}"></label>
@@ -945,88 +1198,90 @@ function filterBar(from,to,extra){
   </div>`;
 }
 function applyLapFilter(page){
-  window._lapFrom=document.getElementById('lapFrom').value;
-  window._lapTo=document.getElementById('lapTo').value;
+  window._lapFrom = document.getElementById('lapFrom').value;
+  window._lapTo = document.getElementById('lapTo').value;
   pages[page]();
 }
-function clearLapFilter(page){window._lapFrom='';window._lapTo='';pages[page]()}
-window.applyLapFilter=applyLapFilter;window.clearLapFilter=clearLapFilter;
+function clearLapFilter(page){ window._lapFrom = ''; window._lapTo = ''; pages[page]() }
+window.applyLapFilter = applyLapFilter;
+window.clearLapFilter = clearLapFilter;
 
 function renderLapJurnal(){
-  const js=filterJournals();
-  document.getElementById('lapjurnal').innerHTML=`
+  const js = filterJournals();
+  document.getElementById('lapjurnal').innerHTML = `
     <h2>Laporan Jurnal</h2><p class="sub">Semua entri jurnal yang telah diposting.</p>
-    ${filterBar(window._lapFrom,window._lapTo,'lapjurnal')}
+    ${filterBar(window._lapFrom, window._lapTo, 'lapjurnal')}
     <div class="card" style="padding:0">
-    ${js.length===0?'<div class="empty">Belum ada jurnal pada rentang ini</div>':`
+    ${js.length===0 ? '<div class="empty">Belum ada jurnal pada rentang ini</div>' : `
     <div class="tbl-wrap" style="border:0"><table>
       <tr><th>Tanggal</th><th>Ref</th><th>Keterangan</th><th>Akun</th><th class="num">Debit</th><th class="num">Kredit</th><th></th></tr>
       ${js.map(j=>j.lines.map((l,i)=>`
         <tr>
-          ${i===0?`<td rowspan="${j.lines.length}">${j.tanggal}</td>
-          <td rowspan="${j.lines.length}">${esc(j.ref)}</td>
-          <td rowspan="${j.lines.length}">${esc(j.ket)}</td>`:''}
+          ${i===0 ? `<td rowspan="${j.lines.length}">${j.tanggal}</td>
+            <td rowspan="${j.lines.length}">${esc(j.ref)}</td>
+            <td rowspan="${j.lines.length}">${esc(j.ket)}</td>` : ''}
           <td>${l.kode} — ${esc((acc(l.kode)||{}).nama||'')}</td>
           <td class="num">${l.debit?fmt(l.debit):''}</td>
           <td class="num">${l.kredit?fmt(l.kredit):''}</td>
-          ${i===0?`<td rowspan="${j.lines.length}" style="text-align:right"><button class="sm danger" onclick="delJournal('${j.id}')">×</button></td>`:''}
+          ${i===0 ? `<td rowspan="${j.lines.length}" style="text-align:right">
+            <button class="sm danger" onclick="delJournal('${j.id}')">×</button></td>` : ''}
         </tr>`).join('')).join('')}
     </table></div>`}
     </div>`;
 }
 function delJournal(id){
-  if(!confirm('Hapus jurnal ini?'))return;
-  DB.journals=DB.journals.filter(j=>j.id!==id);
-  save();renderLapJurnal();toast('Terhapus');
+  if(!confirm('Hapus jurnal ini?')) return;
+  DB.journals = DB.journals.filter(j=>j.id!==id);
+  save(); renderLapJurnal(); toast('Terhapus');
 }
-window.delJournal=delJournal;
+window.delJournal = delJournal;
 
 function renderLapBuku(){
-  const sel=window._bukuAkun||(DB.coa[0]&&DB.coa[0].kode);
-  window._bukuAkun=sel;
-  const js=filterJournals();
-  const a=acc(sel);
-  let sal=0;const normal=normalBalance(sel);
-  const rows=[];
+  const sel = window._bukuAkun || (DB.coa[0] && DB.coa[0].kode);
+  window._bukuAkun = sel;
+  const js = filterJournals();
+  const a = acc(sel);
+  let sal = 0; const normal = normalBalance(sel);
+  const rows = [];
   js.forEach(j=>j.lines.forEach(l=>{
     if(l.kode===sel){
-      sal+= normal==='D' ? ((+l.debit||0)-(+l.kredit||0)) : ((+l.kredit||0)-(+l.debit||0));
-      rows.push({tgl:j.tanggal,ref:j.ref,ket:j.ket,d:l.debit||0,k:l.kredit||0,s:sal});
+      sal += normal==='D' ? ((+l.debit||0)-(+l.kredit||0)) : ((+l.kredit||0)-(+l.debit||0));
+      rows.push({tgl:j.tanggal, ref:j.ref, ket:j.ket, d:l.debit||0, k:l.kredit||0, s:sal});
     }
   }));
-  document.getElementById('lapbuku').innerHTML=`
+  document.getElementById('lapbuku').innerHTML = `
     <h2>Buku Besar</h2><p class="sub">Mutasi per akun beserta saldo berjalan.</p>
-    ${filterBar(window._lapFrom,window._lapTo,'lapbuku')}
+    ${filterBar(window._lapFrom, window._lapTo, 'lapbuku')}
     <div class="card">
       <label class="f"><span>Pilih Akun</span>
       <select onchange="window._bukuAkun=this.value;renderLapBuku()">
         ${DB.coa.map(x=>`<option value="${x.kode}" ${x.kode===sel?'selected':''}>${x.kode} — ${esc(x.nama)}</option>`).join('')}
       </select></label>
     </div>
-    ${!a?'':'<div class="card" style="padding:0"><div style="padding:10px 14px;background:var(--soft);font-weight:600">'+a.kode+' — '+esc(a.nama)+' ('+a.tipe+')</div>'
-    +(rows.length===0?'<div class="empty">Belum ada mutasi</div>':`
+    ${!a ? '' : '<div class="card" style="padding:0"><div style="padding:10px 14px;background:var(--soft);font-weight:600">'+a.kode+' — '+esc(a.nama)+' ('+a.tipe+')</div>'
+    + (rows.length===0 ? '<div class="empty">Belum ada mutasi</div>' : `
     <div class="tbl-wrap" style="border:0"><table>
       <tr><th>Tanggal</th><th>Ref</th><th>Keterangan</th><th class="num">Debit</th><th class="num">Kredit</th><th class="num">Saldo</th></tr>
       ${rows.map(r=>`<tr><td>${r.tgl}</td><td>${esc(r.ref)}</td><td>${esc(r.ket)}</td>
         <td class="num">${r.d?fmt(r.d):''}</td><td class="num">${r.k?fmt(r.k):''}</td>
         <td class="num"><b>${fmt(r.s)}</b></td></tr>`).join('')}
       <tr class="tot"><td colspan="5">Saldo Akhir</td><td class="num">${fmt(sal)}</td></tr>
-    </table></div>`)+'</div>'}
+    </table></div>`) + '</div>'}
   `;
 }
+window.renderLapBuku = renderLapBuku;
 
 function renderLapSaldo(){
-  const js=filterJournals();
-  const rows=DB.coa.map(a=>{
-    let d=0,k=0;
-    js.forEach(j=>j.lines.forEach(l=>{if(l.kode===a.kode){d+=+l.debit||0;k+=+l.kredit||0}}));
-    const sald=normalBalance(a.kode)==='D'?d-k:k-d;
-    return {a,d,k,sald};
+  const js = filterJournals();
+  const rows = DB.coa.map(a=>{
+    let d=0, k=0;
+    js.forEach(j=>j.lines.forEach(l=>{ if(l.kode===a.kode){ d+=+l.debit||0; k+=+l.kredit||0 } }));
+    return {a, d, k};
   }).filter(r=>r.d||r.k);
-  const totD=rows.reduce((s,r)=>s+r.d,0),totK=rows.reduce((s,r)=>s+r.k,0);
-  document.getElementById('lapsaldo').innerHTML=`
+  const totD = rows.reduce((s,r)=>s+r.d,0), totK = rows.reduce((s,r)=>s+r.k,0);
+  document.getElementById('lapsaldo').innerHTML = `
     <h2>Neraca Saldo</h2><p class="sub">Ringkasan saldo seluruh akun.</p>
-    ${filterBar(window._lapFrom,window._lapTo,'lapsaldo')}
+    ${filterBar(window._lapFrom, window._lapTo, 'lapsaldo')}
     <div class="card" style="padding:0">
     <div class="tbl-wrap" style="border:0"><table>
       <tr><th>Kode</th><th>Nama Akun</th><th class="num">Debit</th><th class="num">Kredit</th></tr>
@@ -1037,25 +1292,27 @@ function renderLapSaldo(){
 }
 
 function renderLapLR(){
-  const js=filterJournals();
-  const get=(tipe)=>DB.coa.filter(a=>a.tipe===tipe).map(a=>{
-    let s=0;js.forEach(j=>j.lines.forEach(l=>{if(l.kode===a.kode)s+=(+l.kredit||0)-(+l.debit||0)}));
-    return {a,s};
+  const js = filterJournals();
+  const get = (tipe) => DB.coa.filter(a=>a.tipe===tipe).map(a=>{
+    let s = 0;
+    js.forEach(j=>j.lines.forEach(l=>{ if(l.kode===a.kode) s += (+l.kredit||0)-(+l.debit||0) }));
+    return {a, s};
   }).filter(r=>r.s);
-  const pendapatan=get('Pendapatan');
-  const beban=get('Beban').map(r=>({a:r.a,s:-r.s}));
-  const totPend=pendapatan.reduce((s,r)=>s+r.s,0);
-  const totBeb=beban.reduce((s,r)=>s+r.s,0);
-  const laba=totPend-totBeb;
-  document.getElementById('laplr').innerHTML=`
-    <h2>Laporan Laba Rugi</h2><p class="sub">${esc(DB.company.nama)} — ${window._lapFrom||'awal'} s/d ${window._lapTo||today()}</p>
-    ${filterBar(window._lapFrom,window._lapTo,'laplr')}
+  const pendapatan = get('Pendapatan');
+  const beban = get('Beban').map(r=>({a:r.a, s:-r.s}));
+  const totPend = pendapatan.reduce((s,r)=>s+r.s,0);
+  const totBeb = beban.reduce((s,r)=>s+r.s,0);
+  const laba = totPend - totBeb;
+  document.getElementById('laplr').innerHTML = `
+    <h2>Laporan Laba Rugi</h2>
+    <p class="sub">${esc(DB.company.nama)} — ${window._lapFrom||'awal'} s/d ${window._lapTo||today()}</p>
+    ${filterBar(window._lapFrom, window._lapTo, 'laplr')}
     <div class="card">
       <h3 class="sec" style="margin-top:0">Pendapatan</h3>
-      <table>${pendapatan.map(r=>`<tr><td>${r.a.kode} — ${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">—</td></tr>'}
+      <table>${pendapatan.map(r=>`<tr><td>${r.a.kode} — ${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">—</td></tr>'}
       <tr class="tot"><td>Total Pendapatan</td><td class="num">${fmt(totPend)}</td></tr></table>
       <h3 class="sec">Beban</h3>
-      <table>${beban.map(r=>`<tr><td>${r.a.kode} — ${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">—</td></tr>'}
+      <table>${beban.map(r=>`<tr><td>${r.a.kode} — ${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">—</td></tr>'}
       <tr class="tot"><td>Total Beban</td><td class="num">${fmt(totBeb)}</td></tr></table>
       <h3 class="sec" style="font-size:16px;margin-top:16px;color:${laba>=0?'#16a34a':'#dc2626'}">
         ${laba>=0?'Laba':'Rugi'} Bersih: ${fmt(laba)}</h3>
@@ -1063,32 +1320,46 @@ function renderLapLR(){
 }
 
 function renderLapNeraca(){
-  const js=filterJournals();
-  const get=(tipe)=>DB.coa.filter(a=>a.tipe===tipe).map(a=>{
-    let s=0;js.forEach(j=>j.lines.forEach(l=>{if(l.kode===a.kode)s+=normalBalance(a.kode)==='D'?((+l.debit||0)-(+l.kredit||0)):((+l.kredit||0)-(+l.debit||0))}));
-    return {a,s};
+  const js = filterJournals();
+  const get = (tipe) => DB.coa.filter(a=>a.tipe===tipe).map(a=>{
+    let s = 0;
+    js.forEach(j=>j.lines.forEach(l=>{
+      if(l.kode===a.kode) s += normalBalance(a.kode)==='D'
+        ? ((+l.debit||0)-(+l.kredit||0))
+        : ((+l.kredit||0)-(+l.debit||0));
+    }));
+    return {a, s};
   });
-  const aset=get('Aset').filter(r=>r.s);
-  const liab=get('Liabilitas').filter(r=>r.s);
-  const ekuitas=get('Ekuitas').filter(r=>r.s);
-  let laba=0;
-  DB.coa.forEach(a=>{let s=0;js.forEach(j=>j.lines.forEach(l=>{if(l.kode===a.kode){if(a.tipe==='Pendapatan')s+=(+l.kredit||0)-(+l.debit||0);if(a.tipe==='Beban')s+=(+l.debit||0)-(+l.kredit||0)}}));laba+=s*(a.tipe==='Pendapatan'?1:-1)});
-  const totA=aset.reduce((s,r)=>s+r.s,0);
-  const totL=liab.reduce((s,r)=>s+r.s,0);
-  const totE=ekuitas.reduce((s,r)=>s+r.s,0);
-  const selisih=totA-(totL+totE+laba);
-  document.getElementById('lapneraca').innerHTML=`
+  const aset = get('Aset').filter(r=>r.s);
+  const liab = get('Liabilitas').filter(r=>r.s);
+  const ekuitas = get('Ekuitas').filter(r=>r.s);
+  let laba = 0;
+  DB.coa.forEach(a=>{
+    let s = 0;
+    js.forEach(j=>j.lines.forEach(l=>{
+      if(l.kode===a.kode){
+        if(a.tipe==='Pendapatan') s += (+l.kredit||0)-(+l.debit||0);
+        if(a.tipe==='Beban') s += (+l.debit||0)-(+l.kredit||0);
+      }
+    }));
+    laba += s * (a.tipe==='Pendapatan' ? 1 : -1);
+  });
+  const totA = aset.reduce((s,r)=>s+r.s,0);
+  const totL = liab.reduce((s,r)=>s+r.s,0);
+  const totE = ekuitas.reduce((s,r)=>s+r.s,0);
+  const selisih = totA - (totL + totE + laba);
+  document.getElementById('lapneraca').innerHTML = `
     <h2>Neraca</h2><p class="sub">Posisi keuangan per ${window._lapTo||today()}</p>
-    ${filterBar(window._lapFrom,window._lapTo,'lapneraca')}
+    ${filterBar(window._lapFrom, window._lapTo, 'lapneraca')}
     <div class="split">
       <div class="card">
         <h3 class="sec" style="margin-top:0">Aset</h3>
-        <table>${aset.map(r=>`<tr><td>${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">—</td></tr>'}
+        <table>${aset.map(r=>`<tr><td>${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">—</td></tr>'}
         <tr class="tot"><td>Total Aset</td><td class="num">${fmt(totA)}</td></tr></table>
       </div>
       <div class="card">
         <h3 class="sec" style="margin-top:0">Liabilitas</h3>
-        <table>${liab.map(r=>`<tr><td>${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">—</td></tr>'}
+        <table>${liab.map(r=>`<tr><td>${esc(r.a.nama)}</td><td class="num">${fmt(r.s)}</td></tr>`).join('') || '<tr><td colspan="2" class="empty">—</td></tr>'}
         <tr class="tot"><td>Total Liabilitas</td><td class="num">${fmt(totL)}</td></tr></table>
         <h3 class="sec">Ekuitas</h3>
         <table>
@@ -1099,27 +1370,27 @@ function renderLapNeraca(){
         <h3 class="sec" style="font-size:15px;margin-top:14px">Total Liabilitas + Ekuitas: ${fmt(totL+totE+laba)}</h3>
       </div>
     </div>
-    <div class="card ${selisih===0?'':'bad'}" style="background:${selisih===0?'#dcfce7':'#fee2e2'};border:0">
-      <b>${selisih===0?'✅ Neraca Balance':'⚠️ Selisih: '+fmt(selisih)}</b>
+    <div class="card" style="background:${selisih===0?'#dcfce7':'#fee2e2'};border:0">
+      <b>${selisih===0 ? '✅ Neraca Balance' : '⚠️ Selisih: '+fmt(selisih)}</b>
     </div>`;
 }
 
 function renderLapKas(){
-  const js=filterJournals();
-  const kasKode=['1001','1002'];
-  let masuk=0,keluar=0;
-  const detail=[];
+  const js = filterJournals();
+  const kasKode = ['1001','1002'];
+  let masuk = 0, keluar = 0;
+  const detail = [];
   js.forEach(j=>j.lines.forEach(l=>{
     if(kasKode.includes(l.kode)){
-      const d=+l.debit||0,k=+l.kredit||0;
-      masuk+=d;keluar+=k;
-      detail.push({tgl:j.tanggal,ref:j.ref,ket:j.ket,akun:l.kode,d,k});
+      const d = +l.debit||0, k = +l.kredit||0;
+      masuk += d; keluar += k;
+      detail.push({tgl:j.tanggal, ref:j.ref, ket:j.ket, akun:l.kode, d, k});
     }
   }));
-  const awal=(window._lapFrom?saldo('1001','0000-01-01',window._lapFrom)+saldo('1002','0000-01-01',window._lapFrom):0);
-  document.getElementById('lapkas').innerHTML=`
+  const awal = window._lapFrom ? (saldo('1001','0000-01-01',window._lapFrom) + saldo('1002','0000-01-01',window._lapFrom)) : 0;
+  document.getElementById('lapkas').innerHTML = `
     <h2>Laporan Arus Kas</h2><p class="sub">Mutasi kas & bank (metode langsung sederhana).</p>
-    ${filterBar(window._lapFrom,window._lapTo,'lapkas')}
+    ${filterBar(window._lapFrom, window._lapTo, 'lapkas')}
     <div class="grid">
       <div class="stat"><div class="label">Saldo Awal</div><div class="val">${fmt(awal)}</div></div>
       <div class="stat"><div class="label">Kas Masuk</div><div class="val" style="color:#16a34a">${fmt(masuk)}</div></div>
@@ -1127,7 +1398,7 @@ function renderLapKas(){
       <div class="stat"><div class="label">Saldo Akhir</div><div class="val">${fmt(awal+masuk-keluar)}</div></div>
     </div>
     <div class="card" style="padding:0;margin-top:12px">
-    ${detail.length===0?'<div class="empty">Tidak ada mutasi kas pada periode ini</div>':`
+    ${detail.length===0 ? '<div class="empty">Tidak ada mutasi kas pada periode ini</div>' : `
     <div class="tbl-wrap" style="border:0"><table>
       <tr><th>Tanggal</th><th>Ref</th><th>Keterangan</th><th>Akun</th><th class="num">Masuk</th><th class="num">Keluar</th></tr>
       ${detail.map(r=>`<tr><td>${r.tgl}</td><td>${esc(r.ref)}</td><td>${esc(r.ket)}</td>
@@ -1141,77 +1412,78 @@ function renderLapKas(){
 /* =========================================================
    ROADMAP
 ========================================================= */
-const phases=[
-  {id:0,title:"Fase 0 — Fondasi Akuntansi Dasar",dur:"3–5 hari",tasks:[
+const phases = [
+  {id:0, title:"Fase 0 — Fondasi Akuntansi Dasar", dur:"3–5 hari", tasks:[
     "Tulis ulang dengan bahasa sendiri: beda Neraca vs Laba Rugi",
     "Buat 10 transaksi harian toko/klinik + tentukan akunnya",
     "Pahami konsep debit & kredit",
     "Hafal 5 jenis akun: Aset, Liabilitas, Ekuitas, Pendapatan, Beban"]},
-  {id:1,title:"Fase 1 — Konsep ERP Umum",dur:"2–3 hari",tasks:[
+  {id:1, title:"Fase 1 — Konsep ERP Umum", dur:"2–3 hari", tasks:[
     "Ringkasan 1 halaman: 'Apa itu ERP & kenapa penting'",
     "Tulis 3 kesamaan ERP vs Rekam Medis Elektronik (RME)",
     "Pelajari modul umum ERP: Finance, Sales, Purchasing, Inventory"]},
-  {id:2,title:"Fase 2 — Setup di Web ERP Ini",dur:"± 1 minggu",tasks:[
+  {id:2, title:"Fase 2 — Setup di Web ERP Ini", dur:"± 1 minggu", tasks:[
     "Isi Profil Perusahaan",
     "Rapikan Chart of Accounts",
     "Input minimal 5 pelanggan & 5 vendor",
     "Input minimal 10 barang/jasa"]},
-  {id:3,title:"Fase 3 — Siklus Transaksi",dur:"1–1,5 minggu",tasks:[
+  {id:3, title:"Fase 3 — Siklus Transaksi", dur:"1–1,5 minggu", tasks:[
     "Buat 10 invoice penjualan (campur tunai & kredit)",
     "Buat 5 faktur pembelian",
     "Catat 3 penerimaan kas & 3 pengeluaran kas",
     "Buat 2 jurnal umum manual"]},
-  {id:4,title:"Fase 4 — Persediaan & Laporan",dur:"± 1 minggu",tasks:[
+  {id:4, title:"Fase 4 — Persediaan & Laporan", dur:"± 1 minggu", tasks:[
     "Cek Kartu Stok salah satu barang",
     "Lakukan Stock Opname untuk 3 item",
     "Buka Laba Rugi, Neraca, Arus Kas",
     "Pastikan Neraca Balance"]},
-  {id:5,title:"Fase 5 — Analisis & Portofolio",dur:"1 minggu+",tasks:[
+  {id:5, title:"Fase 5 — Analisis & Portofolio", dur:"1 minggu+", tasks:[
     "Screenshot semua laporan sebagai portofolio",
     "Export data JSON sebagai backup",
     "Update CV: 'Familiar dengan software akuntansi/ERP'",
     "Cek sertifikasi CADE/CAP di campus.accurate.id"]}
 ];
 function renderRoadmap(){
-  const done=JSON.parse(localStorage.getItem(LS+'_roadmap')||'{}');
-  document.getElementById('roadmap').innerHTML=`
+  const done = JSON.parse(localStorage.getItem(LS + '_roadmap') || '{}');
+  document.getElementById('roadmap').innerHTML = `
     <h2>Roadmap Belajar</h2><p class="sub">Progres tersimpan otomatis.</p>
     ${phases.map(p=>`<details class="phase" ${p.id===0?'open':''}>
       <summary>${p.title}<span class="badge">${p.dur}</span></summary>
       <div class="body">${p.tasks.map((t,i)=>{
-        const k=p.id+'-'+i;
+        const k = p.id + '-' + i;
         return `<div class="task ${done[k]?'done':''}">
           <input type="checkbox" ${done[k]?'checked':''} onchange="toggleRoadmap('${k}',this)">
-          <label>${t}</label></div>`}).join('')}
+          <label>${t}</label></div>`
+      }).join('')}
       </div></details>`).join('')}`;
 }
-function toggleRoadmap(k,el){
-  const done=JSON.parse(localStorage.getItem(LS+'_roadmap')||'{}');
-  done[k]=el.checked;
-  localStorage.setItem(LS+'_roadmap',JSON.stringify(done));
-  el.parentElement.classList.toggle('done',el.checked);
+function toggleRoadmap(k, el){
+  const done = JSON.parse(localStorage.getItem(LS + '_roadmap') || '{}');
+  done[k] = el.checked;
+  localStorage.setItem(LS + '_roadmap', JSON.stringify(done));
+  el.parentElement.classList.toggle('done', el.checked);
 }
-window.toggleRoadmap=toggleRoadmap;
+window.toggleRoadmap = toggleRoadmap;
 
 /* =========================================================
    KUIS
 ========================================================= */
-const quiz=[
-  {q:"Apa kepanjangan ERP?",o:["Enterprise Resource Planning","Electronic Report Program","Economic Resource Process"],a:0},
-  {q:"Akun yang bertambah di sisi DEBIT adalah?",o:["Kas","Utang Usaha","Modal","Pendapatan"],a:0},
-  {q:"Laporan yang menunjukkan Aset = Liabilitas + Ekuitas?",o:["Neraca","Laba Rugi","Arus Kas"],a:0},
-  {q:"Pada penjualan kredit, akun yang didebit adalah?",o:["Piutang Usaha","Kas","Pendapatan","Persediaan"],a:0},
-  {q:"HPP (Harga Pokok Penjualan) muncul saat?",o:["Penjualan barang dagang","Penjualan jasa","Pembelian aset","Bayar utang"],a:0},
-  {q:"Rekonsiliasi bank artinya?",o:["Cocokkan catatan kas dengan mutasi rekening","Hitung bunga bank","Buat rekening baru"],a:0},
-  {q:"Stock opname adalah?",o:["Menghitung fisik persediaan & bandingkan dengan sistem","Menambah stok","Menghapus stok"],a:0},
-  {q:"Selisih persediaan (fisik > sistem) dijurnal dengan?",o:["Debit Persediaan, Kredit Selisih Persediaan","Debit Kas, Kredit Persediaan","Debit Beban, Kredit Utang"],a:0},
-  {q:"Sertifikasi dasar Accurate bernama?",o:["CADE","CAP","CAE"],a:0},
-  {q:"Manfaat utama ERP?",o:["Menyatukan data antar divisi dalam satu database","Memperbanyak kertas kerja","Memisahkan data tiap divisi"],a:0}
+const quiz = [
+  {q:"Apa kepanjangan ERP?", o:["Enterprise Resource Planning","Electronic Report Program","Economic Resource Process"], a:0},
+  {q:"Akun yang bertambah di sisi DEBIT adalah?", o:["Kas","Utang Usaha","Modal","Pendapatan"], a:0},
+  {q:"Laporan yang menunjukkan Aset = Liabilitas + Ekuitas?", o:["Neraca","Laba Rugi","Arus Kas"], a:0},
+  {q:"Pada penjualan kredit, akun yang didebit adalah?", o:["Piutang Usaha","Kas","Pendapatan","Persediaan"], a:0},
+  {q:"HPP (Harga Pokok Penjualan) muncul saat?", o:["Penjualan barang dagang","Penjualan jasa","Pembelian aset","Bayar utang"], a:0},
+  {q:"Rekonsiliasi bank artinya?", o:["Cocokkan catatan kas dengan mutasi rekening","Hitung bunga bank","Buat rekening baru"], a:0},
+  {q:"Stock opname adalah?", o:["Menghitung fisik persediaan & bandingkan dengan sistem","Menambah stok","Menghapus stok"], a:0},
+  {q:"Selisih persediaan (fisik > sistem) dijurnal dengan?", o:["Debit Persediaan, Kredit Selisih Persediaan","Debit Kas, Kredit Persediaan","Debit Beban, Kredit Utang"], a:0},
+  {q:"Sertifikasi dasar Accurate bernama?", o:["CADE","CAP","CAE"], a:0},
+  {q:"Manfaat utama ERP?", o:["Menyatukan data antar divisi dalam satu database","Memperbanyak kertas kerja","Memisahkan data tiap divisi"], a:0}
 ];
-let quizState={};
+let quizState = {};
 function renderKuis(){
-  quizState={};
-  document.getElementById('kuis').innerHTML=`
+  quizState = {};
+  document.getElementById('kuis').innerHTML = `
     <h2>Kuis Akuntansi & ERP</h2><p class="sub">Pilih jawaban, lalu klik Periksa.</p>
     ${quiz.map((x,i)=>`
       <div class="q" data-i="${i}">
@@ -1223,28 +1495,33 @@ function renderKuis(){
     <div class="fb" id="kuis_fb"></div>`;
 }
 function checkKuis(){
-  let score=0;
+  let score = 0;
   quiz.forEach((x,i)=>{
-    const q=document.querySelector(`.q[data-i="${i}"]`);
-    const pick=quizState[i];
+    const q = document.querySelector(`.q[data-i="${i}"]`);
+    const pick = quizState[i];
     q.querySelectorAll('.opt').forEach((el,j)=>{
       el.classList.remove('correct','wrong');
-      if(j===x.a)el.classList.add('correct');
-      if(pick===j&&j!==x.a)el.classList.add('wrong');
+      if(j===x.a) el.classList.add('correct');
+      if(pick===j && j!==x.a) el.classList.add('wrong');
     });
-    if(pick===x.a)score++;
+    if(pick === x.a) score++;
   });
-  const fb=document.getElementById('kuis_fb');
-  fb.className='fb '+(score>=7?'ok':'bad');
-  fb.textContent=`Skor kamu: ${score}/10 ${score>=7?'🎉':'💪 Ayo ulangi'}`;
+  const fb = document.getElementById('kuis_fb');
+  fb.className = 'fb ' + (score>=7 ? 'ok' : 'bad');
+  fb.textContent = `Skor kamu: ${score}/10 ${score>=7 ? '🎉' : '💪 Ayo ulangi'}`;
 }
-window.checkKuis=checkKuis;
+window.checkKuis = checkKuis;
+window.renderKuis = renderKuis;
 
 /* =========================================================
    INIT
 ========================================================= */
-loadDB();
-renderDashboard();
+(async function init(){
+  loadDB();
+  renderDashboard();
+  await initSupabase();
+  if(currentUser) await pullFromCloud();
+})();
 </script>
 </body>
 </html>
