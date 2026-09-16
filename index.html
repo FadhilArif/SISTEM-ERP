@@ -28,6 +28,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background
 .landing-btn.ghost{background:#f1f5f9;color:#0f172a;border:1.5px solid #e2e8f0}
 .landing-btn.ghost:hover{background:#e2e8f0;box-shadow:none}
 .landing-note{font-size:12px;color:#94a3b8;margin-top:12px}
+  input.money{text-align:right;font-variant-numeric:tabular-nums}
 .landing-error{display:none;padding:10px 14px;border-radius:10px;font-size:13px;background:#fee2e2;color:#991b1b;margin-bottom:14px;text-align:left}
 .landing-error.on{display:block}
 .spinner{width:44px;height:44px;margin:0 auto 16px;border:3px solid rgba(37,99,235,.15);border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite}
@@ -290,6 +291,24 @@ const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x.toIS
 const daysBetween=(a,b)=>Math.floor((new Date(b)-new Date(a))/86400000);
 const monthOf=t=>t.slice(0,7);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ===== FORMAT UANG ===== */
+function num(v){
+  if(typeof v === 'number') return v;
+  if(v === null || v === undefined) return 0;
+  const s = String(v).replace(/[^\d-]/g,'');
+  return parseInt(s,10) || 0;
+}
+function money(v){
+  const n = num(v);
+  return n ? n.toLocaleString('id-ID') : '';
+}
+// Listener global: format setiap input dengan class="money" saat diketik
+document.addEventListener('input', e => {
+  const t = e.target;
+  if(!t || !t.classList || !t.classList.contains('money')) return;
+  const raw = t.value.replace(/\D/g,'');
+  t.value = raw === '' ? '' : parseInt(raw,10).toLocaleString('id-ID');
+});
 function toast(m,t='ok'){const d=document.createElement('div');d.textContent=m;d.style.cssText=`position:fixed;bottom:20px;right:20px;background:${t==='ok'?'#16a34a':'#dc2626'};color:#fff;padding:10px 16px;border-radius:8px;z-index:999;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:calc(100% - 40px)`;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 
 const COA_DEFAULT=[
@@ -801,8 +820,8 @@ function editBarang(id){
     </div>
     <label class="f"><span>Nama Barang/Jasa</span><input id="b_nama" value="${esc(x.nama)}"></label>
     <div class="split">
-      <label class="f"><span>Harga Beli</span><input type="number" id="b_beli" value="${x.hargaBeli}"></label>
-      <label class="f"><span>Harga Jual</span><input type="number" id="b_jual" value="${x.hargaJual}"></label>
+  <label class="f"><span>Harga Beli</span><input type="text" inputmode="numeric" class="money" id="b_beli" value="${money(x.hargaBeli)}"></label>
+<label class="f"><span>Harga Jual</span><input type="text" inputmode="numeric" class="money" id="b_jual" value="${money(x.hargaJual)}"></label>
     </div>
     <h3 class="sec">Stok per Gudang</h3>
     ${stokHTML}
@@ -810,11 +829,7 @@ function editBarang(id){
 }
 function saveBarang(id){
   const n=b_nama.value.trim();if(!n)return toast('Nama wajib','bad');
-  const data={kode:b_kode.value,nama:n,satuan:b_satuan.value,hargaBeli:+b_beli.value||0,hargaJual:+b_jual.value||0,stokPerGudang:{}};
-  document.querySelectorAll('[data-wh]').forEach(inp=>{
-    const q=+inp.value||0;
-    if(q!==0) data.stokPerGudang[inp.dataset.wh]=q;
-  });
+  const data={kode:b_kode.value,nama:n,satuan:b_satuan.value,hargaBeli:num(b_beli.value),hargaJual:num(b_jual.value),stokPerGudang:{}};
   data.stok=Object.values(data.stokPerGudang).reduce((a,b)=>a+b,0);
   if(id) Object.assign(DB.items.find(x=>x.id===id),data);
   else DB.items.push({id:uid(),...data});
@@ -903,12 +918,12 @@ function editAset(id){
       <label class="f"><span>Tanggal Perolehan</span><input type="date" id="as_tgl" value="${a.tanggal}"></label>
       <label class="f"><span>Umur Ekonomis (bulan)</span><input type="number" id="as_umur" value="${a.umurBulan}"></label>
     </div>
-    <label class="f"><span>Harga Perolehan</span><input type="number" id="as_harga" value="${a.hargaPerolehan}"></label>
+<label class="f"><span>Harga Perolehan</span><input type="text" inputmode="numeric" class="money" id="as_harga" value="${money(a.hargaPerolehan)}"></label>
     <p style="font-size:12px;color:#64748b">Metode penyusutan: garis lurus. Akun: Peralatan (1301), Akum. Penyusutan (1302), Beban Penyusutan (6005).</p>
   `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="saveAset('${id||''}')">Simpan</button>`);
 }
 function saveAset(id){
-  const n=as_nama.value.trim();const h=+as_harga.value||0;const u=+as_umur.value||60;
+  const n=as_nama.value.trim();const h=num(as_harga.value);const u=+as_umur.value||60;
   if(!n||h<=0)return toast('Nama & harga wajib','bad');
   const data={nama:n,tanggal:as_tgl.value,hargaPerolehan:h,umurBulan:u,penyusutanBulanan:Math.round(h/u),totalTersusut:0,postingLog:[]};
   if(id){
@@ -1013,7 +1028,7 @@ function renderInvLines(){
         ${DB.items.map(x=>`<option value="${x.id}" ${x.id===l.itemId?'selected':''}>${esc(x.nama)} (stok ${getStok(x.id,whId)||0})</option>`).join('')}
       </select>
       <input type="number" placeholder="Qty" value="${l.qty}" onchange="invChange(${i},'qty',+this.value)" min="1">
-      <input type="number" placeholder="Harga" value="${l.harga}" onchange="invChange(${i},'harga',+this.value)">
+     <input type="text" inputmode="numeric" class="money" placeholder="Harga" value="${money(l.harga)}" onchange="invChange(${i},'harga',num(this.value))">
       <button class="sm danger" onclick="invDel(${i})">×</button>
     </div>`).join('');
   const sub=invLines.reduce((s,l)=>s+(+l.qty||0)*(+l.harga||0),0);
@@ -1124,7 +1139,7 @@ function renderPurLines(){
         ${DB.items.map(x=>`<option value="${x.id}" ${x.id===l.itemId?'selected':''}>${esc(x.nama)}</option>`).join('')}
       </select>
       <input type="number" value="${l.qty}" onchange="purChange(${i},'qty',+this.value)" min="1">
-      <input type="number" value="${l.harga}" onchange="purChange(${i},'harga',+this.value)">
+     <input type="text" inputmode="numeric" class="money" value="${money(l.harga)}" onchange="purChange(${i},'harga',num(this.value))">
       <button class="sm danger" onclick="purDel(${i})">×</button>
     </div>`).join('');
   const sub=purLines.reduce((s,l)=>s+(+l.qty||0)*(+l.harga||0),0);
@@ -1185,13 +1200,13 @@ function openPelunasanInvoice(id){
       <div class="stat"><div class="label">Sisa</div><div class="val" style="font-size:16px;color:#dc2626">${fmt(s)}</div></div>
     </div>
     <label class="f"><span>Tanggal</span><input type="date" id="pel_tgl" value="${today()}"></label>
-    <label class="f"><span>Jumlah Bayar</span><input type="number" id="pel_jml" value="${s}"></label>
+   <label class="f"><span>Jumlah Bayar</span><input type="text" inputmode="numeric" class="money" id="pel_jml" value="${money(s)}"></label>
     <label class="f"><span>Masuk ke</span><select id="pel_akun"><option value="1001">Kas</option><option value="1002">Bank</option></select></label>
     <label class="f"><span>Keterangan</span><input id="pel_ket" placeholder="mis: Transfer BCA"></label>
   `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="savePelunasanInvoice('${id}')">Simpan</button>`);
 }
 function savePelunasanInvoice(id){
-  const inv=DB.invoices.find(v=>v.id===id);const jml=+pel_jml.value;const s=getSisaInvoice(inv);
+  const inv=DB.invoices.find(v=>v.id===id);const jml=num(pel_jml.value);const s=getSisaInvoice(inv);
   if(!jml||jml<=0)return toast('Jumlah wajib','bad');
   if(jml>s)return toast('Melebihi sisa','bad');
   if(isLocked(pel_tgl.value))return toast('Periode dikunci','bad');
@@ -1216,13 +1231,13 @@ function openPelunasanPurchase(id){
       <div class="stat"><div class="label">Sisa</div><div class="val" style="font-size:16px;color:#dc2626">${fmt(s)}</div></div>
     </div>
     <label class="f"><span>Tanggal</span><input type="date" id="pel_tgl" value="${today()}"></label>
-    <label class="f"><span>Jumlah Bayar</span><input type="number" id="pel_jml" value="${s}"></label>
+   <label class="f"><span>Jumlah Bayar</span><input type="text" inputmode="numeric" class="money" id="pel_jml" value="${money(s)}"></label>
     <label class="f"><span>Keluar dari</span><select id="pel_akun"><option value="1001">Kas</option><option value="1002">Bank</option></select></label>
     <label class="f"><span>Keterangan</span><input id="pel_ket" placeholder="mis: Transfer Mandiri"></label>
   `,`<button class="ghost" onclick="closeModal()">Batal</button><button onclick="savePelunasanPurchase('${id}')">Simpan</button>`);
 }
 function savePelunasanPurchase(id){
-  const pur=DB.purchases.find(v=>v.id===id);const jml=+pel_jml.value;const s=getSisaInvoice(pur);
+  const pur=DB.purchases.find(v=>v.id===id);const jml=num(pel_jml.value);const s=getSisaInvoice(pur);
   if(!jml||jml<=0)return toast('Jumlah wajib','bad');
   if(jml>s)return toast('Melebihi sisa','bad');
   if(isLocked(pel_tgl.value))return toast('Periode dikunci','bad');
@@ -1248,13 +1263,13 @@ function renderPenerimaan(){
       <label class="f"><span>Sumber (akun kredit)</span><select id="rc_kredit">
         ${DB.coa.filter(a=>['Aset','Liabilitas','Ekuitas','Pendapatan'].includes(a.tipe)).map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select></label>
-      <label class="f"><span>Jumlah</span><input type="number" id="rc_jml" value="0"></label>
+      <label class="f"><span>Jumlah</span><input type="text" inputmode="numeric" class="money" id="rc_jml" value=""></label>
       <label class="f"><span>Keterangan</span><input id="rc_ket"></label>
       <button onclick="saveTerima()">Simpan</button>
     </div>`;
 }
 function saveTerima(){
-  const jml=+rc_jml.value;if(!jml)return toast('Jumlah wajib','bad');
+const jml=num(rc_jml.value);if(!jml)return toast('Jumlah wajib','bad');
   const lines=[{kode:rc_akun.value,debit:jml,kredit:0},{kode:rc_kredit.value,debit:0,kredit:jml}];
   postJournal({tanggal:rc_tgl.value,ref:'RC-'+Date.now().toString().slice(-5),ket:rc_ket.value||'Penerimaan',lines});
   toast('Tersimpan');rc_jml.value=0;rc_ket.value='';
@@ -1272,13 +1287,13 @@ function renderPengeluaran(){
       <label class="f"><span>Untuk (akun debit)</span><select id="pc_debit">
         ${DB.coa.filter(a=>['Aset','Liabilitas','Ekuitas','Beban'].includes(a.tipe)).map(a=>`<option value="${a.kode}">${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select></label>
-      <label class="f"><span>Jumlah</span><input type="number" id="pc_jml" value="0"></label>
+   <label class="f"><span>Jumlah</span><input type="text" inputmode="numeric" class="money" id="pc_jml" value=""></label>
       <label class="f"><span>Keterangan</span><input id="pc_ket"></label>
       <button onclick="saveKeluar()">Simpan</button>
     </div>`;
 }
 function saveKeluar(){
-  const jml=+pc_jml.value;if(!jml)return toast('Jumlah wajib','bad');
+const jml=num(pc_jml.value);if(!jml)return toast('Jumlah wajib','bad');
   const lines=[{kode:pc_debit.value,debit:jml,kredit:0},{kode:pc_akun.value,debit:0,kredit:jml}];
   postJournal({tanggal:pc_tgl.value,ref:'PC-'+Date.now().toString().slice(-5),ket:pc_ket.value||'Pengeluaran',lines});
   toast('Tersimpan');pc_jml.value=0;pc_ket.value='';
@@ -1311,8 +1326,8 @@ function renderJvLines(){
         <option value="">— akun —</option>
         ${DB.coa.map(a=>`<option value="${a.kode}" ${a.kode===l.kode?'selected':''}>${a.kode} — ${esc(a.nama)}</option>`).join('')}
       </select>
-      <input type="number" placeholder="Debit" value="${l.debit||''}" onchange="jvChange(${i},'debit',+this.value)">
-      <input type="number" placeholder="Kredit" value="${l.kredit||''}" onchange="jvChange(${i},'kredit',+this.value)">
+  <input type="text" inputmode="numeric" class="money" placeholder="Debit" value="${money(l.debit)}" onchange="jvChange(${i},'debit',num(this.value))">
+<input type="text" inputmode="numeric" class="money" placeholder="Kredit" value="${money(l.kredit)}" onchange="jvChange(${i},'kredit',num(this.value))">
       <button class="sm danger" onclick="jvDel(${i})">×</button>
     </div>`).join('');
   document.getElementById('jv_d').textContent=fmt(jvLines.reduce((s,l)=>s+(+l.debit||0),0));
