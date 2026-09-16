@@ -511,8 +511,14 @@ function postJournal({tanggal,ref,ket,lines,source}){
   DB.journals.push(j);save();return j;
 }
 function getStok(itemId,whId){
-  const it=DB.items.find(x=>x.id===itemId);if(!it)return 0;
-  return (it.stokPerGudang&&it.stokPerGudang[whId])||0;
+  const it=DB.items.find(x=>x.id===itemId);
+  if(!it) return 0;
+  if(!it.stokPerGudang){
+    // fallback: stok lama belum termigrasi
+    return whId==='utama' ? (it.stok||0) : 0;
+  }
+  const v = it.stokPerGudang[whId];
+  return typeof v === 'number' ? v : (parseInt(v,10)||0);
 }
 function addStok(itemId,whId,qty){
   const it=DB.items.find(x=>x.id===itemId);if(!it)return;
@@ -829,10 +835,30 @@ function editBarang(id){
 }
 function saveBarang(id){
   const n=b_nama.value.trim();if(!n)return toast('Nama wajib','bad');
-  const data={kode:b_kode.value,nama:n,satuan:b_satuan.value,hargaBeli:num(b_beli.value),hargaJual:num(b_jual.value),stokPerGudang:{}};
-  data.stok=Object.values(data.stokPerGudang).reduce((a,b)=>a+b,0);
-  if(id) Object.assign(DB.items.find(x=>x.id===id),data);
-  else DB.items.push({id:uid(),...data});
+  const stokPerGudang={};
+  document.querySelectorAll('[data-wh]').forEach(inp=>{
+    const whId=inp.dataset.wh;
+    // Ambil angka, buang karakter non-digit
+    const raw=String(inp.value||'').replace(/[^\d-]/g,'');
+    const q=parseInt(raw,10)||0;
+    stokPerGudang[whId]=q;   // simpan termasuk nilai 0
+  });
+  const totalStok=Object.values(stokPerGudang).reduce((a,b)=>a+(+b||0),0);
+  const data={
+    kode:b_kode.value,
+    nama:n,
+    satuan:b_satuan.value,
+    hargaBeli:num(b_beli.value),
+    hargaJual:num(b_jual.value),
+    stokPerGudang:stokPerGudang,
+    stok:totalStok
+  };
+  if(id){
+    const it=DB.items.find(x=>x.id===id);
+    Object.assign(it,data);
+  }else{
+    DB.items.push({id:uid(),...data});
+  }
   save();closeModal();renderBarang();toast('Tersimpan');
 }
 function delBarang(id){if(!confirm('Hapus?'))return;DB.items=DB.items.filter(x=>x.id!==id);save();renderBarang()}
