@@ -276,12 +276,12 @@ async function initSupabase(){
   currentUser = session ? session.user : null;
   renderAuthUI();
 
-  sb.auth.onAuthStateChange(async (_, sess) => {
-    currentUser = sess ? sess.user : null;
-    renderAuthUI();
-    if(currentUser) await pullFromCloud();
-  });
-}
+ sb.auth.onAuthStateChange((_, sess) => {
+  currentUser = sess ? sess.user : null;
+  renderAuthUI();
+  // Defer ke tick berikutnya supaya tidak deadlock dengan lock internal Supabase
+  if(currentUser) setTimeout(() => pullFromCloud(), 0);
+});
 
 function renderAuthUI(){
   const status = document.getElementById('authStatus');
