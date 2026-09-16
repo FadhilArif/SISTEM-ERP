@@ -589,15 +589,24 @@ async function doLogin(){
   if(!sb) return toast('Supabase belum dikonfigurasi','bad');
   const email = authEmail.value.trim().toLowerCase();
   const pass = authPass.value;
+
+  // Debug: apa yang benar-benar dikirim
+  console.log('LOGIN ATTEMPT');
+  console.log('  email length :', email.length, '| raw:', JSON.stringify(authEmail.value));
+  console.log('  pass length  :', pass.length,  '| raw:', JSON.stringify(pass));
+  console.log('  email chars  :', [...email].map(c=>c.charCodeAt(0)).join(','));
+
   if(!email || !pass) return showLandingError('Isi email & password.');
   document.getElementById('landingError').classList.remove('on');
 
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+  console.log('LOGIN RESPONSE:', { data, error });
+
   if(error){
-    if(/invalid/i.test(error.message)){
-      return showLandingError('Email atau password salah. Cek huruf besar-kecil dan pastikan tidak ada spasi ekstra.');
-    }
-    return showLandingError('Error: ' + error.message);
+    // Tampilkan pesan ASLI dari Supabase, jangan disamarkan
+    showLandingError('Supabase bilang: "' + error.message + '" (status ' + (error.status||'?') + ')');
+    return;
   }
 }
 
