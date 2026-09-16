@@ -83,7 +83,6 @@ tr:hover td{background:#fafbfc}
 .tot{background:var(--soft);font-weight:700}
 .tot td{background:var(--soft)}
 h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
-/* AUTH BOX */
 .authBox{margin:0 4px 14px;padding:10px;background:#1e293b;border-radius:8px;font-size:12px}
 .authBox .status{color:#94a3b8;margin-bottom:8px;font-size:11px}
 .authBox input{margin-bottom:6px;padding:6px 8px;font-size:12px;background:#0f172a;border:1px solid #334155;color:#e2e8f0}
@@ -178,13 +177,9 @@ h3.sec{font-size:14px;margin:14px 0 6px;color:#0f172a}
 <script>
 /* =========================================================
    SUPABASE CONFIG
-   ---------------------------------------------------------
-   Isi dua nilai di bawah dengan milikmu dari:
-   Supabase Dashboard → Project Settings → API
-   Jika dibiarkan kosong, aplikasi jalan mode lokal (localStorage).
 ========================================================= */
-const SUPABASE_URL = 'https://acmmenknbtjfyhanjzpy.supabase.co';   // contoh: 'https://abcdefgh.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbW1lbmtuYnRqZnloYW5qenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1Mzc4MTEsImV4cCI6MjEwNTExMzgxMX0.fYLp9QX8W3h8uiaVtf125kYhgaip21hGYtUa2n-Aj18';   // anon public key (string panjang eyJ...)
+const SUPABASE_URL = 'https://acmmenknbtjfyhanjzpy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbW1lbmtuYnRqZnloYW5qenB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1Mzc4MTEsImV4cCI6MjEwNTExMzgxMX0.fYLp9QX8W3h8uiaVtf125kYhgaip21hGYtUa2n-Aj18';
 
 /* =========================================================
    UTIL
@@ -261,28 +256,6 @@ function isSupabaseConfigured(){
   return SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes('xxxx');
 }
 
-async function initSupabase(){
-  const status = document.getElementById('authStatus');
-  const form = document.getElementById('authForm');
-
-  if(!window.supabase || !isSupabaseConfigured()){
-    status.textContent = '🔌 Mode lokal (Supabase belum dikonfigurasi)';
-    status.style.color = '#fbbf24';
-    return;
-  }
-
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  const { data:{session} } = await sb.auth.getSession();
-  currentUser = session ? session.user : null;
-  renderAuthUI();
-
- sb.auth.onAuthStateChange((_, sess) => {
-  currentUser = sess ? sess.user : null;
-  renderAuthUI();
-  // Defer ke tick berikutnya supaya tidak deadlock dengan lock internal Supabase
-  if(currentUser) setTimeout(() => pullFromCloud(), 0);
-});
-
 function renderAuthUI(){
   const status = document.getElementById('authStatus');
   const form = document.getElementById('authForm');
@@ -343,14 +316,34 @@ async function pullFromCloud(){
     DB = data.data;
     localStorage.setItem(LS, JSON.stringify(DB));
     setSync('✅ Dimuat dari cloud', 'ok');
-    // refresh halaman yang sedang aktif
     const active = document.querySelector('.nav a.active');
     if(active && pages[active.dataset.target]) pages[active.dataset.target]();
   }else{
-    // belum ada di cloud — push kondisi lokal saat ini
     await pushToCloud();
   }
 }
+
+async function initSupabase(){
+  const status = document.getElementById('authStatus');
+
+  if(!window.supabase || !isSupabaseConfigured()){
+    status.textContent = '🔌 Mode lokal (Supabase belum dikonfigurasi)';
+    status.style.color = '#fbbf24';
+    return;
+  }
+
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data:{ session } } = await sb.auth.getSession();
+  currentUser = session ? session.user : null;
+  renderAuthUI();
+
+  sb.auth.onAuthStateChange((_, sess) => {
+    currentUser = sess ? sess.user : null;
+    renderAuthUI();
+    // Defer ke tick berikutnya supaya tidak deadlock dengan lock internal Supabase
+    if(currentUser) setTimeout(() => pullFromCloud(), 0);
+  });
+}   /* <-- INI YANG TADI HILANG */
 
 /* =========================================================
    AUTH ACTIONS
